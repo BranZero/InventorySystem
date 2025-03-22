@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory by Location</title>
+    <link rel="stylesheet" href="SourceFiles/styles.css">
+</head>
+<body>
+    <ul class="navbar button-design">
+        <div class="navbar-left button-design">
+            <li><a href="index">Home</a></li>
+            <li><a href="inventory-add">Add to Inventory</a></li>
+            <li><a href="inventory">Current Inventory</a></li>
+            <li><a href="#past">Past Prices</a></li>
+            <li class="dropdown">
+                <a class="dropbtn">Manage Selection</a>
+                <div class="dropdown-content button-design">
+                    <a href="add-item">Add Item</a>
+                    <a href="add-warehouse">Add Warehouse</a>
+                </div>
+            </li>
+        </div>
+        <div class="navbar-right">
+            <li><a href="#logout">Logout</a></li>
+        </div>
+    </ul>
+    <main>
+        <h1>Inventory by Location</h1>
+        <label for="location-select">Select Location:</label>
+        <select id="location-select">
+            <option value="warehouse1">Warehouse 1</option>
+            <option value="warehouse2">Warehouse 2</option>
+            <option value="store1">Store 1</option>
+            <option value="store2">Store 2</option>
+        </select>
+        
+        <h2>Current Inventory</h2>
+        <table id="inventory-table">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Inventory rows will be added here -->
+            </tbody>
+        </table>
+    </main>
+    <script src="SourceFiles/inventory-fetch.js"></script>
+</body>
+</html>

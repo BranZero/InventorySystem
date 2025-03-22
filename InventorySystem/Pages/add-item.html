@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Service</title>
+    <link rel="stylesheet" href="SourceFiles/styles.css">
+</head>
+<body>
+    <ul class="navbar button-design">
+        <div class="navbar-left">
+            <li><a href="index">Home</a></li>
+            <li><a href="inventory-add">Add to Inventory</a></li>
+            <li><a href="inventory">Current Inventory</a></li>
+            <li><a href="#past">Past Prices</a></li>
+            <li class="dropdown">
+                <a class="dropbtn">Manage Selection</a>
+                <div class="dropdown-content button-design">
+                    <a href="add-item">Add Item</a>
+                    <a href="add-warehouse">Add Warehouse</a>
+                </div>
+            </li>
+        </div>
+        <div class="navbar-right">
+            <li><a href="#logout">Logout</a></li>
+        </div>
+    </ul>
+    <main>
+        <section id="add-item">
+            <h2>Add New Item</h2>
+            <form id="add-item-form">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+                <label for="type">Type:</label>
+                <input type="text" id="type" name="type" required><br>
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" required></textarea><br>
+                <button type="submit">Add Item</button>
+            </form>
+        </section>
+    </main>
+    <script src="SourceFiles/inventory-add-item.js"></script>
+</body>
+</html>

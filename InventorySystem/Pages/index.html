@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Service</title>
+    <link rel="stylesheet" href="SourceFiles/styles.css">
+</head>
+<body>
+    <ul class="navbar button-design">
+        <div class="navbar-left">
+            <li><a href="index">Home</a></li>
+            <li><a href="inventory-add">Add to Inventory</a></li>
+            <li><a href="inventory">Current Inventory</a></li>
+            <li><a href="#past">Past Prices</a></li>
+            <li class="dropdown">
+                <a class="dropbtn">Manage Selection</a>
+                <div class="dropdown-content button-design">
+                    <a href="add-item">Add Item</a>
+                    <a href="add-warehouse">Add Warehouse</a>
+                </div>
+            </li>
+        </div>
+        <div class="navbar-right">
+            <li><a href="#logout">Logout</a></li>
+        </div>
+    </ul>
+    <main>
+        <section id="quick-access">
+            <h2>Quick Access</h2>
+            <ul id="quick-links">
+                <!-- Quick access links will be populated here -->
+            </ul>
+        </section>
+        <section id="recent-access">
+            <h2>Recent Access</h2>
+            <ul id="recent-links">
+                <!-- Recent access links will be populated here -->
+            </ul>
+        </section>
+    </main>
+    <script src="SourceFiles/scripts.js"></script>
+</body>
+</html>
