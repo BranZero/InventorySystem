@@ -1,5 +1,6 @@
 
 using System.Text.Json.Serialization;
+using Microsoft.Data.Sqlite;
 
 namespace Sql.SqlDataTypes;
 
@@ -13,10 +14,23 @@ internal partial class SqlWarehouseSerializationOptions : JsonSerializerContext
 }
 public struct SqlWarehouse : ISqlDataType
 {
-    public readonly string SqlTable => "Warehouse";
+    public string Name;
+
+    public SqlWarehouse(string name){
+        Name = name;
+    }
+
+    readonly string ISqlDataType.SqlTable => "Warehouse";
+
+    public ISqlDataType FromSql(SqliteDataReader reader)
+    {
+        return new SqlWarehouse{
+            Name = reader.GetString(reader.GetOrdinal("name")),
+        };
+    }
 
     public string ToSql()
     {
-        throw new NotImplementedException();
+        return $"{Name}";
     }
 }

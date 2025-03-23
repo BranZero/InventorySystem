@@ -1,5 +1,6 @@
 
 using System.Text.Json.Serialization;
+using Microsoft.Data.Sqlite;
 
 namespace Sql.SqlDataTypes;
 
@@ -14,11 +15,11 @@ internal partial class SqlInventoryRecordSerializationOptions : JsonSerializerCo
 
 public struct SqlInventoryRecord : ISqlDataType
 {
-    public readonly string Location;
-    public readonly string Name;
-    public readonly string Rarity;
-    public readonly int Quantity;
-    public readonly int Price;
+    public string Location;
+    public string Name;
+    public string Rarity;
+    public int Quantity;
+    public int Price;
 
     private SqlInventoryRecord(string location, string name, string rarity, int quantity, int price)
     {
@@ -29,44 +30,27 @@ public struct SqlInventoryRecord : ISqlDataType
         Price = price;
     }
 
-    public readonly string SqlTable => "Inventory_Records";
+    public string SqlTable => "Inventory_Records";
+
 
     //returns true if it was succussful else it failed to parse
-    public static bool TryParseData(string dataString, out SqlInventoryRecord record)
-    {
-        string[] dataArray = dataString.Split(",");
-        if(dataArray.Length != 5)
-        {
-            record = new();
-            return false;
-        }
-        else
-        {
-            if(!IsValidRarity(dataArray[2]) || 
-                !Int32.TryParse(dataArray[3], out int quantity) || 
-                !Int32.TryParse(dataArray[4], out int price))
-            {
-                record = new();
-                return false;
-            }
-
-
-            record = new(
-                dataArray[0],
-                dataArray[1],
-                dataArray[2],
-                quantity,
-                price
-            );
-            return true;
-        }
-    }
-    private static bool IsValidRarity(string rarity)
+    public static bool IsValidRarity(string rarity)
     {
         return rarity switch
         {
             "common" or "uncommon" or "rare" or "heroic" or "epic" or "legendary" => true,
             _ => false,
+        };
+    }
+
+    public ISqlDataType FromSql(SqliteDataReader reader)
+    {
+        return new SqlInventoryRecord{
+            Location = reader.GetString(reader.GetOrdinal("location")),
+            Name = reader.GetString(reader.GetOrdinal("name")),
+            Rarity = reader.GetString(reader.GetOrdinal("name")),
+            Quantity = reader.GetInt32(reader.GetOrdinal("quantity")),
+            Price = reader.GetInt32(reader.GetOrdinal("price")),
         };
     }
 

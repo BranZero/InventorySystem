@@ -1,5 +1,6 @@
 
 using System.Text.Json.Serialization;
+using Microsoft.Data.Sqlite;
 
 namespace Sql.SqlDataTypes;
 
@@ -13,11 +14,20 @@ internal partial class SqlInventoryItemSerializationOptions : JsonSerializerCont
 }
 public struct SqlInventoryItem : ISqlDataType
 {
-    public string Name { get; set; }
-    public string Type { get; set; }
-    public string Description { get; set; }
+    public string Name;
+    public string Type;
+    public string Description;
 
-    public readonly string SqlTable => "Item";
+    readonly string ISqlDataType.SqlTable => "Item";
+
+    public ISqlDataType FromSql(SqliteDataReader reader)
+    {
+        return new SqlInventoryItem{
+            Name = reader.GetString(reader.GetOrdinal("name")),
+            Type = reader.GetString(reader.GetOrdinal("type")),
+            Description = reader.GetString(reader.GetOrdinal("desc"))
+        };
+    }
 
     public readonly string ToSql()
     {
