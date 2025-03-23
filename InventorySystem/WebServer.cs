@@ -144,10 +144,10 @@ public class InventoryServer
         });
 
 
-        //Add new inventory record to db
-        app.MapPost("/api/inventory-receiver", async context =>
+        //Add new inventory record to database
+        app.MapPost("/api/add-inventory-record", async context =>
         {
-            if (context.Request.ContentType != "text/data")
+            if (context.Request.ContentType != "application/json")
             {
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
@@ -168,9 +168,11 @@ public class InventoryServer
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
             }
+
+            await _sqlController.InsertInventoryRecord(record);
         });
 
-        //
+        // for adding new item to the list of items allowed in the database
         app.MapPost("/api/add-item", async context =>
         {
             if (context.Request.ContentType != "application/json")
@@ -196,10 +198,58 @@ public class InventoryServer
             }
 
             //Add new inventory item
-            await _sqlController.AddRecord(record);
+            int amount = await _sqlController.AddRecord(record);
+            if (amount > 0)
+            {
+                context.Response.StatusCode = StatusCodes.Status201Created;
+                await context.Response.WriteAsync("Item added successfully!");
+            }
+            else
+            {
+                context.Response.StatusCode = StatusCodes.Status409Conflict;
+                await context.Response.WriteAsync("Item failed to add!");
+            }
 
-            context.Response.StatusCode = StatusCodes.Status201Created;
-            await context.Response.WriteAsync("Item added successfully!");
+        });
+
+        // for adding new storage locations to the database
+        app.MapPost("/api/add-warehouse", async context =>
+        {
+            if (context.Request.ContentType != "application/json")
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                return;
+            }
+
+            //get inputed data
+            string requestBody;
+            SqlWarehouse record;
+            try
+            {
+                using StreamReader reader = new(context.Request.Body);
+                requestBody = await reader.ReadToEndAsync();
+                record = JsonSerializer.Deserialize<SqlWarehouse>(requestBody, SqlWarehouseSerializationOptions.Default.SqlWarehouse);
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance.Log(ServerHead.Scripts.LogLevel.Error, ex.Message);
+                context.Response.StatusCode = StatusCodes.Status406NotAcceptable;
+                return;
+            }
+
+            //Add new inventory item
+            int amount = await _sqlController.AddRecord(record);
+            if (amount > 0)
+            {
+                context.Response.StatusCode = StatusCodes.Status201Created;
+                await context.Response.WriteAsync("Item added successfully!");
+            }
+            else
+            {
+                context.Response.StatusCode = StatusCodes.Status409Conflict;
+                await context.Response.WriteAsync("Item failed to add!");
+            }
+
         });
 
 
@@ -232,9 +282,11 @@ public class InventoryServer
     {
         Task sourceTask = _sourceFiles.LoadFilesIntoMemory();
         Task pageTask = _pageFiles.LoadFilesIntoMemory();
+        Task sqlTask = _sqlController.InitDataBaseConection();
 
         await sourceTask;
         await pageTask;
+        await sqlTask;
 
 #if DEBUG
         _ = Task.Run(async () =>
@@ -263,7 +315,8 @@ public class InventoryServer
         app.Run();
     }
 
-    public static WebApplicationBuilder CreateWebHostBuilder(string[] args){
+    public static WebApplicationBuilder CreateWebHostBuilder(string[] args)
+    {
         WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(args);
         builder.WebHost.UseUrls();
         builder.Services.AddAuthentication();

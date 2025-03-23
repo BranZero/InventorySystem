@@ -14,6 +14,7 @@ public class EndPointWebsiteTests
     [SetUp]
     public void SetUp()
     {
+        File.Delete("@Inventory.db");
         _factory = new WebApplicationFactory<InventoryServer>();
         _client = _factory.CreateClient();
     }
@@ -23,6 +24,7 @@ public class EndPointWebsiteTests
     {
         _client.Dispose();
         _factory.Dispose();
+        File.Delete("@Inventory.db");
     }
 
     [Test]
