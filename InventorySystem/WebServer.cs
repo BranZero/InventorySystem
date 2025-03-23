@@ -168,18 +168,6 @@ public class InventoryServer
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
             }
-            //validate 
-            if (requestBody.All(c => char.IsLetterOrDigit(c) || c == ',') && SqlInventoryRecord.TryParseData(requestBody, out record))
-            {
-                context.Response.StatusCode = StatusCodes.Status200OK;
-                //send to database record can't be null here
-                Console.WriteLine(record);
-            }
-            else
-            {
-                //invalid string
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            }
         });
 
         //
@@ -207,15 +195,8 @@ public class InventoryServer
                 return;
             }
 
-            //Validate all parts of the record are filled
-            if (string.IsNullOrWhiteSpace(record.Name) || string.IsNullOrWhiteSpace(record.Type) || string.IsNullOrWhiteSpace(record.Description))
-            {
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                await context.Response.WriteAsync("Invalid input: All fields are required.");
-                return;
-            }
-
             //Add new inventory item
+            await _sqlController.AddRecord(record);
 
             context.Response.StatusCode = StatusCodes.Status201Created;
             await context.Response.WriteAsync("Item added successfully!");
