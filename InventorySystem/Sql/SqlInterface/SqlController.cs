@@ -12,39 +12,60 @@ namespace Sql.SqlInterface
         private SqlInMemory _warehouses;
         private SqlInMemory _items;
         public SqlController()
-        {   
+        {
             _warehouses = new SqlInMemory();
             _items = new SqlInMemory();
-
-            SqlCreateTable.InitialDataBaseTables();
         }
         public async Task InitDataBaseConection()
         {
-            await _warehouses.Init("Warehouse");
-            await _items.Init("Item");
+            await SqlCreateTable.InitialDataBaseTables();
+
+            Task warehouseTask = _warehouses.Init("Warehouse");
+            Task itemsTask = _items.Init("Item");
+
+            await warehouseTask;
+            await itemsTask;
         }
 
         private async Task UpdateData(ISqlDataType sqlData, int rowsAffected)
         {
-            if(rowsAffected == 0){
+            if (rowsAffected == 0)
+            {
                 return;
             }
-            if(sqlData is SqlWarehouse){
+            if (sqlData is SqlWarehouse)
+            {
                 await _warehouses.Init("Warehouse");
             }
-            if(sqlData is SqlInventoryItem){
+            if (sqlData is SqlInventoryItem)
+            {
                 await _items.Init("Item");
             }
         }
-        
+
         #region Insert Validations
-        public async Task<int> InsertInventoryRecord(SqlInventoryRecord sqlData){
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sqlData"></param>
+        /// <returns>greater then 0 is success less then is an error </returns>
+        public async Task<int> InsertInventoryRecord(SqlInventoryRecord sqlData)
+        {
             //check if valid
-            
+            if (!_warehouses.Contains(sqlData.Location))
+            {
+                //not allowed
+                return -1;
+            }
+            if (!_items.Contains(sqlData.Name))
+            {
+                //not allowed
+                return -2;
+            }
 
             return await AddRecord(sqlData);
         }
-        
+
 
         #endregion
 
@@ -53,7 +74,7 @@ namespace Sql.SqlInterface
         {
             string sqlCommand = $"INSERT INTO {sqlData.SqlTable} VALUES({sqlData.ToSql()})";
             string result = await SqlAdapter.Instance.SqlNoQueryResults(sqlCommand);
-            int rowsAffected = int.TryParse(result, out int rows)? rows : 0;
+            int rowsAffected = int.TryParse(result, out int rows) ? rows : 0;
 
             await UpdateData(sqlData, rowsAffected);
             return rowsAffected;
@@ -63,7 +84,7 @@ namespace Sql.SqlInterface
         {
             string sqlCommand = $"DELETE FROM {sqlData.SqlTable} WHERE {condition}";
             string result = await SqlAdapter.Instance.SqlNoQueryResults(sqlCommand);
-            int rowsAffected = int.TryParse(result, out int rows)? rows : 0;
+            int rowsAffected = int.TryParse(result, out int rows) ? rows : 0;
 
             await UpdateData(sqlData, rowsAffected);
             return rowsAffected;
@@ -73,7 +94,7 @@ namespace Sql.SqlInterface
         {
             string sqlCommand = $"UPDATE {sqlData.SqlTable} SET {setClause} WHERE {condition}";
             string result = await SqlAdapter.Instance.SqlNoQueryResults(sqlCommand);
-            int rowsAffected = int.TryParse(result, out int rows)? rows : 0;
+            int rowsAffected = int.TryParse(result, out int rows) ? rows : 0;
 
             await UpdateData(sqlData, rowsAffected);
             return rowsAffected;
