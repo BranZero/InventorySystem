@@ -131,14 +131,15 @@ public class InventoryServer
             }
 
             // Get an output of Json data from the sqlite DataBase
-            string? inventoryAsJson = null;
-            if (inventoryAsJson == null)
+            string inventoryAsJson = "{";
+            List<ISqlDataType> inventory = await _sqlController.GetSortedRecords(new SqlInventoryRecord(), "name");
+            if (inventory.Capacity == 0)
             {
                 context.Response.StatusCode = 404; // Not Found
                 await context.Response.WriteAsync($"No inventory found for location: {location}");
                 return;
             }
-
+            
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsync(inventoryAsJson);
         });
@@ -169,7 +170,32 @@ public class InventoryServer
                 return;
             }
 
-            await _sqlController.InsertInventoryRecord(record);
+            int result = await _sqlController.InsertInventoryRecord(record);
+            switch (result)
+            {
+                case 1:
+                    context.Response.StatusCode = StatusCodes.Status201Created;
+                    await context.Response.WriteAsync("Record was succussfully added.");
+                    break;
+                case 0:
+                    context.Response.StatusCode = StatusCodes.Status200OK;
+                    await context.Response.WriteAsync("Error: Failed to add record");
+                    break;
+                case -1:
+                    context.Response.StatusCode = StatusCodes.Status200OK;
+                    await context.Response.WriteAsync("Error: Warehouse doesn't exist yet");
+                    break;
+                case -2:
+                    context.Response.StatusCode = StatusCodes.Status200OK;
+                    await context.Response.WriteAsync("Error: Item doesn't exist in item list yet ");
+                    break;
+                default:
+                    context.Response.StatusCode = StatusCodes.Status200OK;
+                    await context.Response.WriteAsync("Error: Record failed to add!");
+                    Logger.Instance.Log(ServerHead.Scripts.LogLevel.Warning, $"{result} is an unexpected output of add-inventory-record api\n" +
+                    $"Sql={record.ToSql}");
+                    break;
+            }
         });
 
         // for adding new item to the list of items allowed in the database

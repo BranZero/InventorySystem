@@ -54,18 +54,17 @@ namespace Sql.SqlInterface
             //check if valid
             if (!_warehouses.Contains(sqlData.Location))
             {
-                //not allowed
+                //Warehouse doesn't exist yet
                 return -1;
             }
             if (!_items.Contains(sqlData.Name))
             {
-                //not allowed
+                //item doesn't exist in item list yet 
                 return -2;
             }
 
             return await AddRecord(sqlData);
         }
-
 
         #endregion
 
