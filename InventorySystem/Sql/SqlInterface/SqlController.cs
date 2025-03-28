@@ -99,34 +99,34 @@ namespace Sql.SqlInterface
             return rowsAffected;
         }
 
-        public async Task<List<ISqlDataType>> GetSortedRecords(ISqlDataType sqlData, string orderBy)
+        internal async Task<List<T>> GetSortedRecords<T>(T sqlData, string orderBy) where T : ISqlDataType
         {
             string sqlCommand = $"SELECT * FROM {sqlData.SqlTable} ORDER BY {orderBy}";
             var reader = await SqlAdapter.Instance.SqlQueryResult(sqlCommand);
-            var records = new List<ISqlDataType>();
+            var records = new List<T>();
 
             if (reader != null)
             {
                 while (await reader.ReadAsync())
                 {
-                    ISqlDataType record = ConvertReaderToSqlDataType(sqlData.SqlTable, reader);
+                    T record = (T)ConvertReaderToSqlDataType(sqlData.SqlTable, reader);
                     records.Add(record);
                 }
             }
             return records;
         }
 
-        public async Task<List<ISqlDataType>> GetSortedSubList(ISqlDataType sqlData, string likeClause, string orderBy)
+        public async Task<List<T>> GetSortedSubList<T>(ISqlDataType sqlData, string likeClause, string orderBy) where T : ISqlDataType
         {
             string sqlCommand = $"SELECT * FROM {sqlData.SqlTable} WHERE {likeClause} ORDER BY {orderBy}";
             var reader = await SqlAdapter.Instance.SqlQueryResult(sqlCommand);
-            var records = new List<ISqlDataType>();
+            var records = new List<T>();
 
             if (reader != null)
             {
                 while (await reader.ReadAsync())
                 {
-                    ISqlDataType record = ConvertReaderToSqlDataType(sqlData.SqlTable, reader);
+                    T record = (T)ConvertReaderToSqlDataType(sqlData.SqlTable, reader);
                     records.Add(record);
                 }
             }

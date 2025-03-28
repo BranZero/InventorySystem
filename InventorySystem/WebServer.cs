@@ -125,25 +125,82 @@ public class InventoryServer
             string? location = context.Request.Query["location"].ToString();
             if (string.IsNullOrEmpty(location))
             {
-                context.Response.StatusCode = 400; // Bad Request
+                context.Response.StatusCode = StatusCodes.Status400BadRequest; // Bad Request
                 await context.Response.WriteAsync("Location query parameter is required.");
                 return;
             }
 
             // Get an output of Json data from the sqlite DataBase
-            string inventoryAsJson = "{";
-            List<ISqlDataType> inventory = await _sqlController.GetSortedRecords(new SqlInventoryRecord(), "name");
+            List<SqlInventoryRecord> inventory = await _sqlController.GetSortedRecords<SqlInventoryRecord>(new SqlInventoryRecord(), "name");
             if (inventory.Capacity == 0)
             {
-                context.Response.StatusCode = 404; // Not Found
+                context.Response.StatusCode = StatusCodes.Status404NotFound; // Not Found
                 await context.Response.WriteAsync($"No inventory found for location: {location}");
                 return;
             }
-            
+
+            string json = JsonSerializer.Serialize(inventory, SqlInventoryRecordSerializationOptions.Default.SqlInventoryRecord);
+
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(inventoryAsJson);
+            await context.Response.WriteAsync(json);
         });
 
+        app.MapGet("/api/search", async context =>
+        {
+            string? substring = context.Request.Query["search"].ToString();
+            string? type = context.Request.Query["type"].ToString();
+            if (string.IsNullOrEmpty(substring) || !StringValidation(substring))
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest; // Bad Request
+                await context.Response.WriteAsync("Search query parameter is required.");
+                return;
+            }
+            if (string.IsNullOrEmpty(type) || !StringValidation(type))
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest; // Bad Request
+                await context.Response.WriteAsync("Type query parameter is required.");
+                return;
+            }
+
+            //Find the Sql Table
+            string json;
+            if (type == "Item")
+            {
+                // Get an output of Json data from the Item Table
+                List<SqlInventoryItem> inventory = await _sqlController.GetSortedSubList<SqlInventoryItem>(new SqlInventoryItem(), substring, "name");
+                if (inventory.Capacity == 0)
+                {
+                    context.Response.StatusCode = StatusCodes.Status404NotFound; // Not Found
+                    await context.Response.WriteAsync($"No inventory found for location: {substring}");
+                    return;
+                }
+
+                json = JsonSerializer.Serialize(inventory, SqlInventoryRecordSerializationOptions.Default.SqlInventoryRecord);
+            }
+            else if (type == "Warehouse")
+            {
+                // Get an output of Json data from the Warehouse Table
+                List<SqlWarehouse> inventory = await _sqlController.GetSortedSubList<SqlWarehouse>(new SqlWarehouse(), substring, "name");
+                if (inventory.Capacity == 0)
+                {
+                    context.Response.StatusCode = StatusCodes.Status404NotFound; // Not Found
+                    await context.Response.WriteAsync($"No inventory found for location: {substring}");
+                    return;
+                }
+
+                json = JsonSerializer.Serialize(inventory, SqlInventoryRecordSerializationOptions.Default.SqlInventoryRecord);
+            }
+            else
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest; // Bad Request
+                await context.Response.WriteAsync("Invalid type query parameter.");
+                return;
+            }
+
+            context.Response.StatusCode = StatusCodes.Status200OK;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(json);
+        });
 
         //Add new inventory record to database
         app.MapPost("/api/add-inventory-record", async context =>
@@ -281,7 +338,7 @@ public class InventoryServer
 
         #endregion
     }
-    private string? GetContentType(string fileName)
+    private static string? GetContentType(string fileName)
     {
         string ext = Path.GetExtension(fileName);
         return ext switch
@@ -293,16 +350,16 @@ public class InventoryServer
             ".png" => "image/png",
             ".jpg" => "image/jpeg",
             // ".gif" => "image/gif",
-            ".svg" => "image/svg+xml",
-            ".wasm" => "application/wasm",
-            ".pck" => "application/octet-stream",
+            // ".svg" => "image/svg+xml",
+            // ".wasm" => "application/wasm",
+            // ".pck" => "application/octet-stream",
             _ => null, // unsupported file type
         };
     }
-    private bool StringValidation(string value)
+    private static bool StringValidation(string value)
     {
         //contains only letters, numbers and dots
-        return value.All(c => char.IsLetterOrDigit(c) || c == '.' || c == '-');
+        return value.All(c => char.IsLetterOrDigit(c) || c == ' ' || c == '.' || c == '-');
     }
     private async void BootSequence()
     {
