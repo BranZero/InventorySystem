@@ -2,7 +2,7 @@ namespace Sql.SqlInterface;
 public class SqlCreateTable
 {
     //Create the default tables for the database
-    public static async void InitialDataBaseTables()
+    public static async Task InitialDataBaseTables()
     {
         string result;
         string sqlLine;

@@ -125,29 +125,87 @@ public class InventoryServer
             string? location = context.Request.Query["location"].ToString();
             if (string.IsNullOrEmpty(location))
             {
-                context.Response.StatusCode = 400; // Bad Request
+                context.Response.StatusCode = StatusCodes.Status400BadRequest; // Bad Request
                 await context.Response.WriteAsync("Location query parameter is required.");
                 return;
             }
 
             // Get an output of Json data from the sqlite DataBase
-            string? inventoryAsJson = null;
-            if (inventoryAsJson == null)
+            List<SqlInventoryRecord> inventory = await _sqlController.GetSortedRecords<SqlInventoryRecord>(new SqlInventoryRecord(), "name");
+            if (inventory.Capacity == 0)
             {
-                context.Response.StatusCode = 404; // Not Found
+                context.Response.StatusCode = StatusCodes.Status404NotFound; // Not Found
                 await context.Response.WriteAsync($"No inventory found for location: {location}");
                 return;
             }
 
+            string json = JsonSerializer.Serialize(inventory, SqlInventoryRecordSerializationOptions.Default.SqlInventoryRecord);
+
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(inventoryAsJson);
+            await context.Response.WriteAsync(json);
         });
 
-
-        //Add new inventory record to db
-        app.MapPost("/api/inventory-receiver", async context =>
+        app.MapGet("/api/search", async context =>
         {
-            if (context.Request.ContentType != "text/data")
+            string? substring = context.Request.Query["search"].ToString();
+            string? type = context.Request.Query["type"].ToString();
+            if (string.IsNullOrEmpty(substring) || !StringValidation(substring))
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest; // Bad Request
+                await context.Response.WriteAsync("Search query parameter is required.");
+                return;
+            }
+            if (string.IsNullOrEmpty(type) || !StringValidation(type))
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest; // Bad Request
+                await context.Response.WriteAsync("Type query parameter is required.");
+                return;
+            }
+
+            //Find the Sql Table
+            string json;
+            if (type == "Item")
+            {
+                // Get an output of Json data from the Item Table
+                List<SqlInventoryItem> inventory = await _sqlController.GetSortedSubList<SqlInventoryItem>(new SqlInventoryItem(), substring, "name");
+                if (inventory.Capacity == 0)
+                {
+                    context.Response.StatusCode = StatusCodes.Status404NotFound; // Not Found
+                    await context.Response.WriteAsync($"No inventory found for location: {substring}");
+                    return;
+                }
+
+                json = JsonSerializer.Serialize(inventory, SqlInventoryRecordSerializationOptions.Default.SqlInventoryRecord);
+            }
+            else if (type == "Warehouse")
+            {
+                // Get an output of Json data from the Warehouse Table
+                List<SqlWarehouse> inventory = await _sqlController.GetSortedSubList<SqlWarehouse>(new SqlWarehouse(), substring, "name");
+                if (inventory.Capacity == 0)
+                {
+                    context.Response.StatusCode = StatusCodes.Status404NotFound; // Not Found
+                    await context.Response.WriteAsync($"No inventory found for location: {substring}");
+                    return;
+                }
+
+                json = JsonSerializer.Serialize(inventory, SqlInventoryRecordSerializationOptions.Default.SqlInventoryRecord);
+            }
+            else
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest; // Bad Request
+                await context.Response.WriteAsync("Invalid type query parameter.");
+                return;
+            }
+
+            context.Response.StatusCode = StatusCodes.Status200OK;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(json);
+        });
+
+        //Add new inventory record to database
+        app.MapPost("/api/add-inventory-record", async context =>
+        {
+            if (context.Request.ContentType != "application/json")
             {
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
@@ -168,9 +226,36 @@ public class InventoryServer
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
             }
+
+            int result = await _sqlController.InsertInventoryRecord(record);
+            switch (result)
+            {
+                case 1:
+                    context.Response.StatusCode = StatusCodes.Status201Created;
+                    await context.Response.WriteAsync("Record was succussfully added.");
+                    break;
+                case 0:
+                    context.Response.StatusCode = StatusCodes.Status200OK;
+                    await context.Response.WriteAsync("Error: Failed to add record");
+                    break;
+                case -1:
+                    context.Response.StatusCode = StatusCodes.Status200OK;
+                    await context.Response.WriteAsync("Error: Warehouse doesn't exist yet");
+                    break;
+                case -2:
+                    context.Response.StatusCode = StatusCodes.Status200OK;
+                    await context.Response.WriteAsync("Error: Item doesn't exist in item list yet ");
+                    break;
+                default:
+                    context.Response.StatusCode = StatusCodes.Status200OK;
+                    await context.Response.WriteAsync("Error: Record failed to add!");
+                    Logger.Instance.Log(ServerHead.Scripts.LogLevel.Warning, $"{result} is an unexpected output of add-inventory-record api\n" +
+                    $"Sql={record.ToSql}");
+                    break;
+            }
         });
 
-        //
+        // for adding new item to the list of items allowed in the database
         app.MapPost("/api/add-item", async context =>
         {
             if (context.Request.ContentType != "application/json")
@@ -196,16 +281,64 @@ public class InventoryServer
             }
 
             //Add new inventory item
-            await _sqlController.AddRecord(record);
+            int amount = await _sqlController.AddRecord(record);
+            if (amount > 0)
+            {
+                context.Response.StatusCode = StatusCodes.Status201Created;
+                await context.Response.WriteAsync("Item added successfully!");
+            }
+            else
+            {
+                context.Response.StatusCode = StatusCodes.Status409Conflict;
+                await context.Response.WriteAsync("Item failed to add!");
+            }
 
-            context.Response.StatusCode = StatusCodes.Status201Created;
-            await context.Response.WriteAsync("Item added successfully!");
+        });
+
+        // for adding new storage locations to the database
+        app.MapPost("/api/add-warehouse", async context =>
+        {
+            if (context.Request.ContentType != "application/json")
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                return;
+            }
+
+            //get inputed data
+            string requestBody;
+            SqlWarehouse record;
+            try
+            {
+                using StreamReader reader = new(context.Request.Body);
+                requestBody = await reader.ReadToEndAsync();
+                record = JsonSerializer.Deserialize<SqlWarehouse>(requestBody, SqlWarehouseSerializationOptions.Default.SqlWarehouse);
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance.Log(ServerHead.Scripts.LogLevel.Error, ex.Message);
+                context.Response.StatusCode = StatusCodes.Status406NotAcceptable;
+                return;
+            }
+
+            //Add new inventory item
+            int amount = await _sqlController.AddRecord(record);
+            if (amount > 0)
+            {
+                context.Response.StatusCode = StatusCodes.Status201Created;
+                await context.Response.WriteAsync("Item added successfully!");
+            }
+            else
+            {
+                context.Response.StatusCode = StatusCodes.Status409Conflict;
+                await context.Response.WriteAsync("Item failed to add!");
+            }
+
         });
 
 
         #endregion
     }
-    private string? GetContentType(string fileName)
+    private static string? GetContentType(string fileName)
     {
         string ext = Path.GetExtension(fileName);
         return ext switch
@@ -217,24 +350,26 @@ public class InventoryServer
             ".png" => "image/png",
             ".jpg" => "image/jpeg",
             // ".gif" => "image/gif",
-            ".svg" => "image/svg+xml",
-            ".wasm" => "application/wasm",
-            ".pck" => "application/octet-stream",
+            // ".svg" => "image/svg+xml",
+            // ".wasm" => "application/wasm",
+            // ".pck" => "application/octet-stream",
             _ => null, // unsupported file type
         };
     }
-    private bool StringValidation(string value)
+    private static bool StringValidation(string value)
     {
         //contains only letters, numbers and dots
-        return value.All(c => char.IsLetterOrDigit(c) || c == '.' || c == '-');
+        return value.All(c => char.IsLetterOrDigit(c) || c == ' ' || c == '.' || c == '-');
     }
     private async void BootSequence()
     {
         Task sourceTask = _sourceFiles.LoadFilesIntoMemory();
         Task pageTask = _pageFiles.LoadFilesIntoMemory();
+        Task sqlTask = _sqlController.InitDataBaseConection();
 
         await sourceTask;
         await pageTask;
+        await sqlTask;
 
 #if DEBUG
         _ = Task.Run(async () =>
@@ -263,7 +398,8 @@ public class InventoryServer
         app.Run();
     }
 
-    public static WebApplicationBuilder CreateWebHostBuilder(string[] args){
+    public static WebApplicationBuilder CreateWebHostBuilder(string[] args)
+    {
         WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(args);
         builder.WebHost.UseUrls();
         builder.Services.AddAuthentication();

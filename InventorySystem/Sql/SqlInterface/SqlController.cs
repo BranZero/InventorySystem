@@ -8,59 +8,125 @@ namespace Sql.SqlInterface
 {
     public class SqlController
     {
+        //in memory list of all warehouse and items
+        private SqlInMemory _warehouses;
+        private SqlInMemory _items;
         public SqlController()
         {
-            SqlCreateTable.InitialDataBaseTables();
+            _warehouses = new SqlInMemory();
+            _items = new SqlInMemory();
+        }
+        public async Task InitDataBaseConection()
+        {
+            await SqlCreateTable.InitialDataBaseTables();
+
+            Task warehouseTask = _warehouses.Init("Warehouse");
+            Task itemsTask = _items.Init("Item");
+
+            await warehouseTask;
+            await itemsTask;
         }
 
-        #region Requests
+        private async Task UpdateData(ISqlDataType sqlData, int rowsAffected)
+        {
+            if (rowsAffected == 0)
+            {
+                return;
+            }
+            if (sqlData is SqlWarehouse)
+            {
+                await _warehouses.Init("Warehouse");
+            }
+            if (sqlData is SqlInventoryItem)
+            {
+                await _items.Init("Item");
+            }
+        }
+
+        #region Insert Validations
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sqlData"></param>
+        /// <returns>greater then 0 is success less then is an error </returns>
+        public async Task<int> InsertInventoryRecord(SqlInventoryRecord sqlData)
+        {
+            //check if valid
+            if (!_warehouses.Contains(sqlData.Location))
+            {
+                //Warehouse doesn't exist yet
+                return -1;
+            }
+            if (!_items.Contains(sqlData.Name))
+            {
+                //item doesn't exist in item list yet 
+                return -2;
+            }
+
+            return await AddRecord(sqlData);
+        }
+
+        #endregion
+
+        #region DataBase Interactions
         public async Task<int> AddRecord(ISqlDataType sqlData)
         {
             string sqlCommand = $"INSERT INTO {sqlData.SqlTable} VALUES({sqlData.ToSql()})";
             string result = await SqlAdapter.Instance.SqlNoQueryResults(sqlCommand);
-            return int.TryParse(result, out int rowsAffected) ? rowsAffected : 0;
+            int rowsAffected = int.TryParse(result, out int rows) ? rows : 0;
+
+            await UpdateData(sqlData, rowsAffected);
+            return rowsAffected;
         }
 
-        public async Task<int> RemoveRecord(string tableName, string condition)
+        public async Task<int> RemoveRecord(ISqlDataType sqlData, string condition)
         {
-            string sqlCommand = $"DELETE FROM {tableName} WHERE {condition}";
+            string sqlCommand = $"DELETE FROM {sqlData.SqlTable} WHERE {condition}";
             string result = await SqlAdapter.Instance.SqlNoQueryResults(sqlCommand);
-            return int.TryParse(result, out int rowsAffected) ? rowsAffected : 0;
+            int rowsAffected = int.TryParse(result, out int rows) ? rows : 0;
+
+            await UpdateData(sqlData, rowsAffected);
+            return rowsAffected;
         }
 
-        public async Task<int> UpdateRecord(string tableName, string setClause, string condition)
+        public async Task<int> UpdateRecord(ISqlDataType sqlData, string setClause, string condition)
         {
-            string sqlCommand = $"UPDATE {tableName} SET {setClause} WHERE {condition}";
+            string sqlCommand = $"UPDATE {sqlData.SqlTable} SET {setClause} WHERE {condition}";
             string result = await SqlAdapter.Instance.SqlNoQueryResults(sqlCommand);
-            return int.TryParse(result, out int rowsAffected) ? rowsAffected : 0;
+            int rowsAffected = int.TryParse(result, out int rows) ? rows : 0;
+
+            await UpdateData(sqlData, rowsAffected);
+            return rowsAffected;
         }
 
-        public async Task<List<ISqlDataType>> GetSortedRecords(string tableName, string orderBy)
+        internal async Task<List<T>> GetSortedRecords<T>(T sqlData, string orderBy) where T : ISqlDataType
         {
-            string sqlCommand = $"SELECT * FROM {tableName} ORDER BY {orderBy}";
+            string sqlCommand = $"SELECT * FROM {sqlData.SqlTable} ORDER BY {orderBy}";
             var reader = await SqlAdapter.Instance.SqlQueryResult(sqlCommand);
-            var records = new List<ISqlDataType>();
+            var records = new List<T>();
+
             if (reader != null)
             {
                 while (await reader.ReadAsync())
                 {
-                    ISqlDataType record = ConvertReaderToSqlDataType(tableName, reader);
+                    T record = (T)ConvertReaderToSqlDataType(sqlData.SqlTable, reader);
                     records.Add(record);
                 }
             }
             return records;
         }
 
-        public async Task<List<ISqlDataType>> GetSortedSubList(string tableName, string likeClause, string orderBy)
+        public async Task<List<T>> GetSortedSubList<T>(ISqlDataType sqlData, string likeClause, string orderBy) where T : ISqlDataType
         {
-            string sqlCommand = $"SELECT * FROM {tableName} WHERE {likeClause} ORDER BY {orderBy}";
+            string sqlCommand = $"SELECT * FROM {sqlData.SqlTable} WHERE {likeClause} ORDER BY {orderBy}";
             var reader = await SqlAdapter.Instance.SqlQueryResult(sqlCommand);
-            var records = new List<ISqlDataType>();
+            var records = new List<T>();
+
             if (reader != null)
             {
                 while (await reader.ReadAsync())
                 {
-                    ISqlDataType record = ConvertReaderToSqlDataType(tableName, reader);
+                    T record = (T)ConvertReaderToSqlDataType(sqlData.SqlTable, reader);
                     records.Add(record);
                 }
             }
