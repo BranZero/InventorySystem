@@ -16,21 +16,33 @@ internal partial class SqlInventoryRecordSerializationOptions : JsonSerializerCo
 public struct SqlInventoryRecord : ISqlDataType
 {
     public string Location;
-    public string Name;
+    public string Item;
     public string Rarity;
     public int Quantity;
     public int Price;
 
-    private SqlInventoryRecord(string location, string name, string rarity, int quantity, int price)
+    public SqlInventoryRecord(string location, string item, string rarity, int quantity, int price)
     {
         Location = location;
-        Name = name;
+        Item = item;
         Rarity = rarity;
         Quantity = quantity;
         Price = price;
     }
 
-    public string SqlTable => "Inventory_Records";
+    public static string SqlTable => "Inventory_Records";
+    public static string SqlColomns => "";
+
+    public static T FromSql<T>(SqliteDataReader reader) where T : ISqlDataType
+    {
+        return (T)(ISqlDataType) new SqlInventoryRecord{
+            Location = reader.GetString(reader.GetOrdinal("location")),
+            Item = reader.GetString(reader.GetOrdinal("name")),
+            Rarity = reader.GetString(reader.GetOrdinal("name")),
+            Quantity = reader.GetInt32(reader.GetOrdinal("quantity")),
+            Price = reader.GetInt32(reader.GetOrdinal("price")),
+        };
+    }
 
 
     //returns true if it was succussful else it failed to parse
@@ -43,24 +55,13 @@ public struct SqlInventoryRecord : ISqlDataType
         };
     }
 
-    public ISqlDataType FromSql(SqliteDataReader reader)
-    {
-        return new SqlInventoryRecord{
-            Location = reader.GetString(reader.GetOrdinal("location")),
-            Name = reader.GetString(reader.GetOrdinal("name")),
-            Rarity = reader.GetString(reader.GetOrdinal("name")),
-            Quantity = reader.GetInt32(reader.GetOrdinal("quantity")),
-            Price = reader.GetInt32(reader.GetOrdinal("price")),
-        };
-    }
-
     public string ToSql()
     {
-        return $"{Location},{Name},{Rarity},{Quantity},{Price},Date.Now()";
+        return $"'{Location}','{Item}','{Rarity}','{Quantity}','{Price}',Date.Now()";
     }
 
     public override readonly string ToString()
     {
-        return $"[{Location},{Name},{Rarity},{Quantity},{Price}]";
+        return $"[{Location},{Item},{Rarity},{Quantity},{Price}]";
     }
 }

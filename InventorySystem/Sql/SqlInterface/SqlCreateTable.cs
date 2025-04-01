@@ -21,7 +21,7 @@ public class SqlCreateTable
 
 
         //Warehouse table
-        sqlLine = "CREATE TABLE IF NOT EXISTS Warehouses (" +
+        sqlLine = "CREATE TABLE IF NOT EXISTS Warehouse (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT," +
             "name TEXT NOT NULL);";
         result = await SqlAdapter.Instance.SqlNoQueryResults(sqlLine);
@@ -31,7 +31,7 @@ public class SqlCreateTable
         sqlLine = "CREATE TABLE IF NOT EXISTS Inventory_Records (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT," +
             "warehouse_id INTEGER," +
-            "item_name TEXT NOT NULL," +
+            "item_id INTEGER," +
             "quantity INTEGER," +
             "FOREIGN KEY (warehouse_id) REFERENCES Warehouse(id));";
         result = await SqlAdapter.Instance.SqlNoQueryResults(sqlLine);
