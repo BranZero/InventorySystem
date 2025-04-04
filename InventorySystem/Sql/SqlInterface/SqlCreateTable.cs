@@ -22,27 +22,26 @@ public class SqlCreateTable
 
         //Warehouse table
         sqlLine = "CREATE TABLE IF NOT EXISTS Warehouse (" +
-            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-            "name TEXT NOT NULL);";
+            "name TEXT NOT NULL PRIMARY KEY);";
+        result = await SqlAdapter.Instance.SqlNoQueryResults(sqlLine);
+        Console.WriteLine(result);
+
+        //Inventory Item Table
+        sqlLine = "CREATE TABLE IF NOT EXISTS Item (" +
+            "name TEXT NOT NULL PRIMARY KEY," +
+            "type TEXT NOT NULL," +
+            "desc TEXT NOT NULL);";
         result = await SqlAdapter.Instance.SqlNoQueryResults(sqlLine);
         Console.WriteLine(result);
 
         //Inventory Table
         sqlLine = "CREATE TABLE IF NOT EXISTS Inventory_Records (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-            "warehouse_id INTEGER," +
-            "item_id INTEGER," +
+            "warehouse_id TEXT," + //redo with foreign keys to other tables
+            "item_id TEXT," +
             "quantity INTEGER," +
-            "FOREIGN KEY (warehouse_id) REFERENCES Warehouse(id));";
-        result = await SqlAdapter.Instance.SqlNoQueryResults(sqlLine);
-        Console.WriteLine(result);
-
-        //Inventory Item Table
-        sqlLine = "CREATE TABLE IF NOT EXISTS Item (" +
-            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-            "name TEXT NOT NULL," +
-            "type TEXT NOT NULL," +
-            "desc TEXT NOT NULL);";
+            "FOREIGN KEY (warehouse_id) REFERENCES Warehouse(name)," +
+            "FOREIGN KEY (item_id) REFERENCES Item(name));";
         result = await SqlAdapter.Instance.SqlNoQueryResults(sqlLine);
         Console.WriteLine(result);
     }

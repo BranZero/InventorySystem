@@ -31,7 +31,7 @@ public class SqlTests
         }
         catch (System.Exception)
         {
-
+            //most likely a used by another process
         }
     }
     
@@ -42,6 +42,7 @@ public class SqlTests
             "DROP TABLE IF EXISTS Item;";
         await SqlAdapter.Instance.SqlNoQueryResults(sql);
     }
+
     private async Task BuildTestDataBase()
     {
         //Add Warehouse locations
@@ -136,6 +137,27 @@ public class SqlTests
             Description = "N/A"
         };
         int result = await _sqlController.InsertItem(sqlInventoryItem);
+        Assert.That(result, Is.EqualTo(0));
+    }
+
+
+    [TestCase("Winter")]
+    [TestCase("Summer")]
+    public async Task AddWarehouse_New(string name){
+        SqlWarehouse sqlWarehouse = new(){
+            Name = name,
+        };
+        int result = await _sqlController.InsertWarehouse(sqlWarehouse);
+        Assert.That(result, Is.EqualTo(1));
+    }
+
+    [TestCase("West")]
+    [TestCase("South")]
+    public async Task AddWarehouse_Existing(string name){
+        SqlWarehouse sqlWarehouse = new(){
+            Name = name,
+        };
+        int result = await _sqlController.InsertWarehouse(sqlWarehouse);
         Assert.That(result, Is.EqualTo(0));
     }
 }

@@ -7,18 +7,18 @@ namespace Sql.SqlInterface;
 public class SqlInMemory<T> where T : ISqlDataType
 {
     private SqlController _sqlController;
-    public Dictionary<string, int> _data;
+    public HashSet<string> _data;
     private Mutex _mutex;
     public SqlInMemory(SqlController sqlController)
     {
         _sqlController = sqlController;
-        _data = new Dictionary<string, int>();
+        _data = new HashSet<string>();
         _mutex = new Mutex();
     }
     public async Task Init(string tableName)
     {
         _mutex.WaitOne();
-        _data = new Dictionary<string, int>();
+        _data = new HashSet<string>();
         var records = await _sqlController.GetSortedRecords<T>("name");
         if (records == null || records.Count == 0)
         {
@@ -31,12 +31,12 @@ public class SqlInMemory<T> where T : ISqlDataType
             if (item is SqlWarehouse)
             {
                 SqlWarehouse tmp = (SqlWarehouse)(ISqlDataType)item;
-                _data.TryAdd(tmp.Name, tmp.Id);//this won't be null in this case
+                _data.Add(tmp.Name);//this won't be null in this case
             }
             else if (item is SqlInventoryItem)
             {
                 SqlInventoryItem tmp = (SqlInventoryItem)(ISqlDataType)item;
-                _data.TryAdd(tmp.Name, tmp.Id);//this won't be null in this case
+                _data.Add(tmp.Name);//this won't be null in this case
             }
             else
             {
@@ -46,20 +46,11 @@ public class SqlInMemory<T> where T : ISqlDataType
 
         _mutex.ReleaseMutex();
     }
-    public bool Contains(string name, out int id)
+    public bool Contains(string name)
     {
         _mutex.WaitOne();
         //prevent form entering when rebuilding "_data"
         _mutex.ReleaseMutex();
-        if (_data.ContainsKey(name))
-        {
-            id = _data[name];
-            return true;
-        }
-        else
-        {
-            id = -1;
-            return false;
-        }
+        return _data.Contains(name);
     }
 }

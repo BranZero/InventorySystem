@@ -14,7 +14,6 @@ internal partial class SqlInventoryItemSerializationOptions : JsonSerializerCont
 }
 public struct SqlInventoryItem : ISqlDataType
 {
-    public int Id;
     public string Name;
     public string Type;
     public string Description;
@@ -25,7 +24,6 @@ public struct SqlInventoryItem : ISqlDataType
     public static T FromSql<T>(SqliteDataReader reader) where T : ISqlDataType
     {
         return (T)(ISqlDataType)new SqlInventoryItem{
-            Id = reader.GetInt32(reader.GetOrdinal("id")),
             Name = reader.GetString(reader.GetOrdinal("name")),
             Type = reader.GetString(reader.GetOrdinal("type")),
             Description = reader.GetString(reader.GetOrdinal("desc"))

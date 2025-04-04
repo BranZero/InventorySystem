@@ -14,7 +14,6 @@ internal partial class SqlWarehouseSerializationOptions : JsonSerializerContext
 }
 public struct SqlWarehouse : ISqlDataType
 {
-    public int Id;
     public string Name;
 
     public SqlWarehouse(string name){
@@ -28,7 +27,6 @@ public struct SqlWarehouse : ISqlDataType
     public static T FromSql<T>(SqliteDataReader reader) where T : ISqlDataType
     {
         return (T)(ISqlDataType) new SqlWarehouse{
-            Id = reader.GetInt32(reader.GetOrdinal("id")),
             Name = reader.GetString(reader.GetOrdinal("name")),
         };
     }

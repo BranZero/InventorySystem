@@ -52,35 +52,33 @@ namespace Sql.SqlInterface
         public async Task<int> InsertInventoryRecord(SqlInventoryRecord sqlData)
         {
             //check if valid
-            if (!_warehouses.Contains(sqlData.Location, out int id))
+            if (!_warehouses.Contains(sqlData.Location))
             {
                 //Warehouse doesn't exist yet
                 return -1;
             }
-            if (!_items.Contains(sqlData.Item, out int id2))
+            if (!_items.Contains(sqlData.Item))
             {
                 //item doesn't exist in item list yet 
                 return -2;
             }
-            sqlData.Location = id.ToString();
-            sqlData.Item = id2.ToString();
             return await AddRecord(sqlData);
         }
 
         public async Task<int> InsertItem(SqlInventoryItem sqlData){
-            if (_items.Contains(sqlData.Name, out _))
+            if (_items.Contains(sqlData.Name))
             {
-                //item does exist in item list yet 
+                //item name exists in item list already
                 return 0;
             }
             return await AddRecord(sqlData);
         }
 
         public async Task<int> InsertWarehouse(SqlWarehouse sqlData){
-            if (_warehouses.Contains(sqlData.Name, out _))
+            if (_warehouses.Contains(sqlData.Name))
             {
-                //warehouse does exist in warehouse list yet 
-                return -1;
+                //warehouse name exists in warehouse list already
+                return 0;
             }
             return await AddRecord(sqlData);
         }
