@@ -20,17 +20,19 @@ public struct SqlWarehouse : ISqlDataType
         Name = name;
     }
 
-    readonly string ISqlDataType.SqlTable => "Warehouse";
+    public static string SqlTable => "Warehouse";
 
-    public ISqlDataType FromSql(SqliteDataReader reader)
+    public static string SqlColomns => "name";
+
+    public static T FromSql<T>(SqliteDataReader reader) where T : ISqlDataType
     {
-        return new SqlWarehouse{
+        return (T)(ISqlDataType) new SqlWarehouse{
             Name = reader.GetString(reader.GetOrdinal("name")),
         };
     }
 
     public string ToSql()
     {
-        return $"{Name}";
+        return $"'{Name}'";
     }
 }

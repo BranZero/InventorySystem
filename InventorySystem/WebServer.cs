@@ -131,8 +131,8 @@ public class InventoryServer
             }
 
             // Get an output of Json data from the sqlite DataBase
-            List<SqlInventoryRecord> inventory = await _sqlController.GetSortedRecords<SqlInventoryRecord>(new SqlInventoryRecord(), "name");
-            if (inventory.Capacity == 0)
+            List<SqlInventoryRecord>? inventory = await _sqlController.GetSortedRecords<SqlInventoryRecord>("name");
+            if (inventory == null || inventory.Capacity == 0)
             {
                 context.Response.StatusCode = StatusCodes.Status404NotFound; // Not Found
                 await context.Response.WriteAsync($"No inventory found for location: {location}");
@@ -167,8 +167,8 @@ public class InventoryServer
             if (type == "Item")
             {
                 // Get an output of Json data from the Item Table
-                List<SqlInventoryItem> inventory = await _sqlController.GetSortedSubList<SqlInventoryItem>(new SqlInventoryItem(), substring, "name");
-                if (inventory.Capacity == 0)
+                List<SqlInventoryItem>? inventory = await _sqlController.GetSortedSubList<SqlInventoryItem>(substring, "name");
+                if (inventory == null || inventory.Capacity == 0)
                 {
                     context.Response.StatusCode = StatusCodes.Status404NotFound; // Not Found
                     await context.Response.WriteAsync($"No inventory found for location: {substring}");
@@ -180,8 +180,8 @@ public class InventoryServer
             else if (type == "Warehouse")
             {
                 // Get an output of Json data from the Warehouse Table
-                List<SqlWarehouse> inventory = await _sqlController.GetSortedSubList<SqlWarehouse>(new SqlWarehouse(), substring, "name");
-                if (inventory.Capacity == 0)
+                List<SqlWarehouse>? inventory = await _sqlController.GetSortedSubList<SqlWarehouse>(substring, "name");
+                if (inventory == null || inventory.Capacity == 0)
                 {
                     context.Response.StatusCode = StatusCodes.Status404NotFound; // Not Found
                     await context.Response.WriteAsync($"No inventory found for location: {substring}");
@@ -281,7 +281,7 @@ public class InventoryServer
             }
 
             //Add new inventory item
-            int amount = await _sqlController.AddRecord(record);
+            int amount = await _sqlController.InsertItem(record);
             if (amount > 0)
             {
                 context.Response.StatusCode = StatusCodes.Status201Created;
@@ -321,7 +321,7 @@ public class InventoryServer
             }
 
             //Add new inventory item
-            int amount = await _sqlController.AddRecord(record);
+            int amount = await _sqlController.InsertWarehouse(record);
             if (amount > 0)
             {
                 context.Response.StatusCode = StatusCodes.Status201Created;

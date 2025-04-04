@@ -18,11 +18,12 @@ public struct SqlInventoryItem : ISqlDataType
     public string Type;
     public string Description;
 
-    readonly string ISqlDataType.SqlTable => "Item";
+    public static string SqlTable => "Item";
+    public static string SqlColomns => "name, type, desc";
 
-    public ISqlDataType FromSql(SqliteDataReader reader)
+    public static T FromSql<T>(SqliteDataReader reader) where T : ISqlDataType
     {
-        return new SqlInventoryItem{
+        return (T)(ISqlDataType)new SqlInventoryItem{
             Name = reader.GetString(reader.GetOrdinal("name")),
             Type = reader.GetString(reader.GetOrdinal("type")),
             Description = reader.GetString(reader.GetOrdinal("desc"))
@@ -31,6 +32,6 @@ public struct SqlInventoryItem : ISqlDataType
 
     public readonly string ToSql()
     {
-        return $"{Name},{Type},{Description}";
+        return $"'{Name}','{Type}','{Description}'";
     }
 }

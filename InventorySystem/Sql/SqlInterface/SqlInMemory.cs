@@ -1,36 +1,56 @@
 
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Data.Sqlite;
+using Sql.SqlDataTypes;
 
 namespace Sql.SqlInterface;
-public class SqlInMemory
+public class SqlInMemory<T> where T : ISqlDataType
 {
+    private SqlController _sqlController;
     public HashSet<string> _data;
-    private bool _ready;
-    public bool Ready => _ready;
-    public SqlInMemory(){
+    private Mutex _mutex;
+    public SqlInMemory(SqlController sqlController)
+    {
+        _sqlController = sqlController;
         _data = new HashSet<string>();
-        _ready = false;
+        _mutex = new Mutex();
     }
-    public async Task Init(string tableName){
-        _ready = false;
+    public async Task Init(string tableName)
+    {
+        _mutex.WaitOne();
         _data = new HashSet<string>();
-        string sqlCommand = $"SELECT * FROM {tableName}";
-        var reader = await SqlAdapter.Instance.SqlQueryResult(sqlCommand);
-        if (reader == null){
+        var records = await _sqlController.GetSortedRecords<T>("name");
+        if (records == null || records.Count == 0)
+        {
+            _mutex.ReleaseMutex();
             return;
         }
-
-        while (await reader.ReadAsync())
+        //update memory
+        foreach (var item in records)
         {
-            string name = reader.GetString(reader.GetOrdinal("name"));
-            _data.Add(name);
+            if (item is SqlWarehouse)
+            {
+                SqlWarehouse tmp = (SqlWarehouse)(ISqlDataType)item;
+                _data.Add(tmp.Name);//this won't be null in this case
+            }
+            else if (item is SqlInventoryItem)
+            {
+                SqlInventoryItem tmp = (SqlInventoryItem)(ISqlDataType)item;
+                _data.Add(tmp.Name);//this won't be null in this case
+            }
+            else
+            {
+                throw new UnsupportedContentTypeException($"{item}");
+            }
         }
-        _ready = true;
+
+        _mutex.ReleaseMutex();
     }
-    public bool Contains(string name){
-        if(!_ready){
-            throw new Exception("Data of list isn't ready yet");
-        }
+    public bool Contains(string name)
+    {
+        _mutex.WaitOne();
+        //prevent form entering when rebuilding "_data"
+        _mutex.ReleaseMutex();
         return _data.Contains(name);
     }
 }
