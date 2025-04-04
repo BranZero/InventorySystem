@@ -37,8 +37,8 @@ public struct SqlInventoryRecord : ISqlDataType
     {
         return (T)(ISqlDataType) new SqlInventoryRecord{
             Location = reader.GetString(reader.GetOrdinal("location")),
-            Item = reader.GetString(reader.GetOrdinal("name")),
-            Rarity = reader.GetString(reader.GetOrdinal("name")),
+            Item = reader.GetString(reader.GetOrdinal("item_id")),
+            Rarity = reader.GetString(reader.GetOrdinal("rarity")),
             Quantity = reader.GetInt32(reader.GetOrdinal("quantity")),
             Price = reader.GetInt32(reader.GetOrdinal("price")),
         };

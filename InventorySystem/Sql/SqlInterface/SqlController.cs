@@ -35,11 +35,11 @@ namespace Sql.SqlInterface
             }
             if (sqlData is SqlWarehouse)
             {
-                _ = Task.Run(() => _warehouses.Init("Warehouse")); //intented to run in background
+                _ = Task.Run(() => _warehouses.Init("Warehouse")); //intended to run in background
             }
             if (sqlData is SqlInventoryItem)
             {
-                _ = Task.Run(() => _items.Init("Item")); //intented to run in background
+                _ = Task.Run(() => _items.Init("Item")); //intended to run in background
             }
         }
 
