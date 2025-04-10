@@ -222,7 +222,7 @@ public class InventoryServer
             }
             catch (Exception ex)
             {
-                Logger.Instance.Log(ServerHead.Scripts.LogLevel.Error, ex.Message);
+                Logger.Instance.Log(LogLevel.Error, ex.Message);
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
             }
@@ -235,12 +235,12 @@ public class InventoryServer
                     await context.Response.WriteAsync("Record was succussfully added.");
                     break;
                 case SqlInventoryRecordResult.ManyChanges:
-                    Logger.Instance.Log(ServerHead.Scripts.LogLevel.Error, $"an Insert resulted in many changes to the database from the following: {record}");
+                    Logger.Instance.Log(LogLevel.Error, $"an Insert resulted in many changes to the database from the following: {record}");
                     context.Response.StatusCode = StatusCodes.Status200OK;
                     await context.Response.WriteAsync("Error: Failed to add record");
                     break;
                 case SqlInventoryRecordResult.NothingHappend:
-                    Logger.Instance.Log(ServerHead.Scripts.LogLevel.Error, $"an Insert resulted in no changes to the database from the following: {record}");
+                    Logger.Instance.Log(LogLevel.Error, $"an Insert resulted in no changes to the database from the following: {record}");
                     context.Response.StatusCode = StatusCodes.Status200OK;
                     await context.Response.WriteAsync("Error: Failed to add record");
                     break;
@@ -271,7 +271,7 @@ public class InventoryServer
             }
             catch (Exception ex)
             {
-                Logger.Instance.Log(ServerHead.Scripts.LogLevel.Error, ex.Message);
+                Logger.Instance.Log(LogLevel.Error, ex.Message);
                 context.Response.StatusCode = StatusCodes.Status406NotAcceptable;
                 return;
             }
@@ -311,7 +311,7 @@ public class InventoryServer
             }
             catch (Exception ex)
             {
-                Logger.Instance.Log(ServerHead.Scripts.LogLevel.Error, ex.Message);
+                Logger.Instance.Log(LogLevel.Error, ex.Message);
                 context.Response.StatusCode = StatusCodes.Status406NotAcceptable;
                 return;
             }
@@ -386,7 +386,7 @@ public class InventoryServer
 
     public static void Main(string[] args)
     {
-        Logger.Instance.Log(ServerHead.Scripts.LogLevel.Info, "Starting Server");
+        Logger.Instance.Log(LogLevel.Information, "Starting Server");
         InventoryServer inventoryServer = new InventoryServer();
         var builder = CreateWebHostBuilder(args);
         var app = builder.Build();

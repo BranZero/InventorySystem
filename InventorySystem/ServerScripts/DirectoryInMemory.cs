@@ -22,7 +22,7 @@ public class DirectoryInMemory
         if (!Directory.Exists(_directoryPath))
         {
             //can't find the directory 
-            Logger.Instance.Log(LogLevel.Fatal, $"Can't find {_directoryPath}");
+            Logger.Instance.Log(LogLevel.Critical, $"Can't find {_directoryPath}");
             throw new Exception($"Can't find {_directoryPath}");
         }
 
@@ -52,7 +52,7 @@ public class DirectoryInMemory
         catch (Exception e)
         {
             //log and exit program
-            Logger.Instance.Log(LogLevel.Fatal, $"Can't access {_directoryPath} Reason: {e.Message}");
+            Logger.Instance.Log(LogLevel.Critical, $"Can't access {_directoryPath} Reason: {e.Message}");
             throw new Exception($"Can't access {_directoryPath}");
         }
 
