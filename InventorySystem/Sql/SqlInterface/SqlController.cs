@@ -49,23 +49,29 @@ namespace Sql.SqlInterface
         /// </summary>
         /// <param name="sqlData"></param>
         /// <returns>greater then 0 is success less then is an error </returns>
-        public async Task<int> InsertInventoryRecord(SqlInventoryRecord sqlData)
+        public async Task<SqlInventoryRecordResult> InsertInventoryRecord(SqlInventoryRecord sqlData)
         {
-            //check if valid
-            if (!_warehouses.Contains(sqlData.Location))
-            {
-                //Warehouse doesn't exist yet
-                return -1;
-            }
-            if (!_items.Contains(sqlData.Item))
-            {
-                //item doesn't exist in item list yet 
-                return -2;
-            }
-            return await AddRecord(sqlData);
+            //Warehouse doesn't exist yet
+            if (!_warehouses.Contains(sqlData.Location)) return SqlInventoryRecordResult.InvalidWarehouse;
+            //item doesn't exist in item list yet 
+            if (!_items.Contains(sqlData.Item)) return SqlInventoryRecordResult.InvalidItem;
+
+            if (!SqlInventoryRecord.IsValidRarity(sqlData.Rarity)) return SqlInventoryRecordResult.InvalidRarity;
+
+            if (sqlData.Quantity <= 0) return SqlInventoryRecordResult.QuantityAtOrBelowZero;
+
+            if (sqlData.Price < 0) return SqlInventoryRecordResult.PriceBelowZero;
+
+            int result = await AddRecord(sqlData);
+
+            //Should be only one row changed
+            if (result == 1) return SqlInventoryRecordResult.Success;
+            if (result == 0) return SqlInventoryRecordResult.NothingHappend;
+            return SqlInventoryRecordResult.ManyChanges;
         }
 
-        public async Task<int> InsertItem(SqlInventoryItem sqlData){
+        public async Task<int> InsertItem(SqlInventoryItem sqlData)
+        {
             if (_items.Contains(sqlData.Name))
             {
                 //item name exists in item list already
@@ -74,7 +80,8 @@ namespace Sql.SqlInterface
             return await AddRecord(sqlData);
         }
 
-        public async Task<int> InsertWarehouse(SqlWarehouse sqlData){
+        public async Task<int> InsertWarehouse(SqlWarehouse sqlData)
+        {
             if (_warehouses.Contains(sqlData.Name))
             {
                 //warehouse name exists in warehouse list already

@@ -227,30 +227,26 @@ public class InventoryServer
                 return;
             }
 
-            int result = await _sqlController.InsertInventoryRecord(record);
+            SqlInventoryRecordResult result = await _sqlController.InsertInventoryRecord(record);
             switch (result)
             {
-                case 1:
+                case SqlInventoryRecordResult.Success:
                     context.Response.StatusCode = StatusCodes.Status201Created;
                     await context.Response.WriteAsync("Record was succussfully added.");
                     break;
-                case 0:
+                case SqlInventoryRecordResult.ManyChanges:
+                    Logger.Instance.Log(ServerHead.Scripts.LogLevel.Error, $"an Insert resulted in many changes to the database from the following: {record}");
                     context.Response.StatusCode = StatusCodes.Status200OK;
                     await context.Response.WriteAsync("Error: Failed to add record");
                     break;
-                case -1:
+                case SqlInventoryRecordResult.NothingHappend:
+                    Logger.Instance.Log(ServerHead.Scripts.LogLevel.Error, $"an Insert resulted in no changes to the database from the following: {record}");
                     context.Response.StatusCode = StatusCodes.Status200OK;
-                    await context.Response.WriteAsync("Error: Warehouse doesn't exist yet");
-                    break;
-                case -2:
-                    context.Response.StatusCode = StatusCodes.Status200OK;
-                    await context.Response.WriteAsync("Error: Item doesn't exist in item list yet ");
+                    await context.Response.WriteAsync("Error: Failed to add record");
                     break;
                 default:
                     context.Response.StatusCode = StatusCodes.Status200OK;
-                    await context.Response.WriteAsync("Error: Record failed to add!");
-                    Logger.Instance.Log(ServerHead.Scripts.LogLevel.Warning, $"{result} is an unexpected output of add-inventory-record api\n" +
-                    $"Sql={record.ToSql}");
+                    await context.Response.WriteAsync("Error: Failed to add record");
                     break;
             }
         });

@@ -1,3 +1,5 @@
+using Sql.SqlDataTypes;
+
 namespace Sql.SqlInterface;
 public class SqlCreateTable
 {
@@ -21,13 +23,13 @@ public class SqlCreateTable
 
 
         //Warehouse table
-        sqlLine = "CREATE TABLE IF NOT EXISTS Warehouse (" +
+        sqlLine = $"CREATE TABLE IF NOT EXISTS {SqlWarehouse.SqlTable} (" +
             "name TEXT NOT NULL PRIMARY KEY);";
         result = await SqlAdapter.Instance.SqlNoQueryResults(sqlLine);
         Console.WriteLine(result);
 
         //Inventory Item Table
-        sqlLine = "CREATE TABLE IF NOT EXISTS Item (" +
+        sqlLine = $"CREATE TABLE IF NOT EXISTS {SqlInventoryItem.SqlTable} (" +
             "name TEXT NOT NULL PRIMARY KEY," +
             "type TEXT NOT NULL," +
             "desc TEXT NOT NULL);";
@@ -35,11 +37,14 @@ public class SqlCreateTable
         Console.WriteLine(result);
 
         //Inventory Table
-        sqlLine = "CREATE TABLE IF NOT EXISTS Inventory_Records (" +
+        sqlLine = $"CREATE TABLE IF NOT EXISTS {SqlInventoryRecord.SqlTable} (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-            "warehouse_id TEXT," + //redo with foreign keys to other tables
+            "warehouse_id TEXT," + 
             "item_id TEXT," +
+            "rarity TEXT," +
             "quantity INTEGER," +
+            "price INTEGER," +
+            "date DATE," +
             "FOREIGN KEY (warehouse_id) REFERENCES Warehouse(name)," +
             "FOREIGN KEY (item_id) REFERENCES Item(name));";
         result = await SqlAdapter.Instance.SqlNoQueryResults(sqlLine);

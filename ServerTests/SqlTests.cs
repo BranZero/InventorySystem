@@ -160,4 +160,18 @@ public class SqlTests
         int result = await _sqlController.InsertWarehouse(sqlWarehouse);
         Assert.That(result, Is.EqualTo(0));
     }
+
+    [TestCase("West","Bronze","Rare", 10,99)]
+    [TestCase("East","Boots","Epic", 1,88)]
+    public async Task AddInventoryRecords_New(string location, string item, string rarity, int quantity, int price){
+        SqlInventoryRecord sqlInventoryRecord = new(){
+            Location = location,
+            Item = item,
+            Rarity = rarity,
+            Quantity = quantity,
+            Price = price,
+        };
+        SqlInventoryRecordResult result = await _sqlController.InsertInventoryRecord(sqlInventoryRecord);
+        Assert.That(result, Is.EqualTo(SqlInventoryRecordResult.Success));
+    }
 }
