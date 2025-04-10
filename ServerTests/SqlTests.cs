@@ -174,4 +174,74 @@ public class SqlTests
         SqlInventoryRecordResult result = await _sqlController.InsertInventoryRecord(sqlInventoryRecord);
         Assert.That(result, Is.EqualTo(SqlInventoryRecordResult.Success));
     }
+
+    [TestCase("Wes","Bronze","Rare", 10,99)]
+    [TestCase("Maxwell","Boots","Epic", 1,88)]
+    public async Task AddInventoryRecords_InvalidWarehouse(string location, string item, string rarity, int quantity, int price){
+        SqlInventoryRecord sqlInventoryRecord = new(){
+            Location = location,
+            Item = item,
+            Rarity = rarity,
+            Quantity = quantity,
+            Price = price,
+        };
+        SqlInventoryRecordResult result = await _sqlController.InsertInventoryRecord(sqlInventoryRecord);
+        Assert.That(result, Is.EqualTo(SqlInventoryRecordResult.InvalidWarehouse));
+    }
+
+    [TestCase("West","Candy","Rare", 10,99)]
+    [TestCase("East","Root","Epic", 1,88)]
+    public async Task AddInventoryRecords_InvalidItem(string location, string item, string rarity, int quantity, int price){
+        SqlInventoryRecord sqlInventoryRecord = new(){
+            Location = location,
+            Item = item,
+            Rarity = rarity,
+            Quantity = quantity,
+            Price = price,
+        };
+        SqlInventoryRecordResult result = await _sqlController.InsertInventoryRecord(sqlInventoryRecord);
+        Assert.That(result, Is.EqualTo(SqlInventoryRecordResult.InvalidItem));
+    }
+
+    [TestCase("West","Bronze","None", 10,99)]
+    [TestCase("East","Boots","Epi", 1,88)]
+    public async Task AddInventoryRecords_InvalidRarity(string location, string item, string rarity, int quantity, int price){
+        SqlInventoryRecord sqlInventoryRecord = new(){
+            Location = location,
+            Item = item,
+            Rarity = rarity,
+            Quantity = quantity,
+            Price = price,
+        };
+        SqlInventoryRecordResult result = await _sqlController.InsertInventoryRecord(sqlInventoryRecord);
+        Assert.That(result, Is.EqualTo(SqlInventoryRecordResult.InvalidRarity));
+    }
+
+    [TestCase("West","Bronze","Rare", -1,99)]
+    [TestCase("East","Boots","Epic", 0,88)]
+    public async Task AddInventoryRecords_InvalidQuantity(string location, string item, string rarity, int quantity, int price){
+        SqlInventoryRecord sqlInventoryRecord = new(){
+            Location = location,
+            Item = item,
+            Rarity = rarity,
+            Quantity = quantity,
+            Price = price,
+        };
+        SqlInventoryRecordResult result = await _sqlController.InsertInventoryRecord(sqlInventoryRecord);
+        Assert.That(result, Is.EqualTo(SqlInventoryRecordResult.QuantityAtOrBelowZero));
+    }
+
+    [TestCase("West","Bronze","Rare", 10,-22229)]
+    [TestCase("East","Boots","Epic", 1,-1)]
+    public async Task AddInventoryRecords_InvalidPrice(string location, string item, string rarity, int quantity, int price){
+        SqlInventoryRecord sqlInventoryRecord = new(){
+            Location = location,
+            Item = item,
+            Rarity = rarity,
+            Quantity = quantity,
+            Price = price,
+        };
+        SqlInventoryRecordResult result = await _sqlController.InsertInventoryRecord(sqlInventoryRecord);
+        Assert.That(result, Is.EqualTo(SqlInventoryRecordResult.PriceBelowZero));
+    }
 }
