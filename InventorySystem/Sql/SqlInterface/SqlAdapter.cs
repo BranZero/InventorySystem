@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Data.Sqlite;
+using ServerHead.Scripts;
 using Sql.SqlDataTypes;
 // using ServerHead.Scripts;
 
@@ -43,7 +44,7 @@ public class SqlAdapter
         }
         catch (Exception e)
         {
-            // Logger.Instance.Log(LogLevel.Error, e.Message);
+            Logger.Instance.Log(LogLevel.Error, e.Message);
             return e.Message;
         }
     }
@@ -69,7 +70,7 @@ public class SqlAdapter
         }
         catch (Exception e)
         {
-            // Logger.Instance.Log(LogLevel.Error, e.Message);
+            Logger.Instance.Log(LogLevel.Error, e.Message);
             return null;
         }
     }
