@@ -35,11 +35,11 @@ namespace Sql.SqlInterface
             }
             if (sqlData is SqlWarehouse)
             {
-                _ = Task.Run(() => _warehouses.Init("Warehouse")); //intended to run in background
+                await Task.Run(() => _warehouses.Init("Warehouse")); //intended to run in background
             }
             if (sqlData is SqlInventoryItem)
             {
-                _ = Task.Run(() => _items.Init("Item")); //intended to run in background
+                await Task.Run(() => _items.Init("Item")); //intended to run in background
             }
         }
 
@@ -72,21 +72,16 @@ namespace Sql.SqlInterface
 
         public async Task<int> InsertItem(SqlInventoryItem sqlData)
         {
-            if (_items.Contains(sqlData.Name))
-            {
-                //item name exists in item list already
-                return 0;
-            }
+            //item name exists in item list already
+            if (_items.Contains(sqlData.Name)) return 0;
             return await AddRecord(sqlData);
         }
 
         public async Task<int> InsertWarehouse(SqlWarehouse sqlData)
         {
-            if (_warehouses.Contains(sqlData.Name))
-            {
-                //warehouse name exists in warehouse list already
-                return 0;
-            }
+            if (!IsValidString(sqlData.Name)) return 0;
+            //warehouse name exists in warehouse list already
+            if (_warehouses.Contains(sqlData.Name)) return 0;
             return await AddRecord(sqlData);
         }
 
@@ -136,6 +131,13 @@ namespace Sql.SqlInterface
             var records = await SqlAdapter.Instance.SqlQueryResult<T>(sqlCommand);
             return records;
         }
+        #endregion
+        #region Validations
+        public bool IsValidString(string line)
+        {
+            return line.All(c => char.IsLetterOrDigit(c) || c == ' ');
+        }
+
         #endregion
     }
 }

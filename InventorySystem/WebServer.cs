@@ -278,14 +278,14 @@ public class InventoryServer
 
             //Add new inventory item
             int amount = await _sqlController.InsertItem(record);
-            if (amount > 0)
+            if (amount == 1)
             {
                 context.Response.StatusCode = StatusCodes.Status201Created;
                 await context.Response.WriteAsync("Item added successfully!");
             }
             else
             {
-                context.Response.StatusCode = StatusCodes.Status409Conflict;
+                context.Response.StatusCode = StatusCodes.Status200OK;
                 await context.Response.WriteAsync("Item failed to add!");
             }
 
@@ -318,14 +318,14 @@ public class InventoryServer
 
             //Add new inventory item
             int amount = await _sqlController.InsertWarehouse(record);
-            if (amount > 0)
+            if (amount == 1)
             {
                 context.Response.StatusCode = StatusCodes.Status201Created;
                 await context.Response.WriteAsync("Item added successfully!");
             }
             else
             {
-                context.Response.StatusCode = StatusCodes.Status409Conflict;
+                context.Response.StatusCode = StatusCodes.Status200OK;
                 await context.Response.WriteAsync("Item failed to add!");
             }
 

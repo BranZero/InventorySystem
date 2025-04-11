@@ -24,23 +24,23 @@ public class SqlTests
     public async Task TearDown()
     {
         await ResetTables();
-        await SqlAdapter.Instance.Dispose();
-        try
-        {
-            File.Delete(@".\Inventory.db");
-        }
-        catch (System.Exception)
-        {
-            //most likely a used by another process
-        }
+        // await SqlAdapter.Instance.Dispose();
+        // try
+        // {
+        //     File.Delete(@".\Inventory.db");
+        // }
+        // catch (System.Exception)
+        // {
+        //     //most likely a used by another process
+        // }
     }
     
     private async Task ResetTables()
     {
-        string sql = "DROP TABLE IF EXISTS Warehouse;" +
-            "DROP TABLE IF EXISTS Inventory_Records;" +
+        string sql = "DROP TABLE IF EXISTS Inventory_Records;" +
+            "DROP TABLE IF EXISTS Warehouse;" +
             "DROP TABLE IF EXISTS Item;";
-        await SqlAdapter.Instance.SqlNoQueryResults(sql);
+        string result = await SqlAdapter.Instance.SqlNoQueryResults(sql);
     }
 
     private async Task BuildTestDataBase()
@@ -243,5 +243,13 @@ public class SqlTests
         };
         SqlInventoryRecordResult result = await _sqlController.InsertInventoryRecord(sqlInventoryRecord);
         Assert.That(result, Is.EqualTo(SqlInventoryRecordResult.PriceBelowZero));
+    }
+
+    [TestCase("sss');" + $"INSERT INTO Item (name,type,desc) VALUES ('was','a','success")]
+    public async Task AddWarehouse_SqlInjection(string location)
+    {
+        SqlWarehouse sqlWarehouse = new(location);
+        int result = await _sqlController.InsertWarehouse(sqlWarehouse);
+        Assert.That(result, Is.EqualTo(0));
     }
 }
