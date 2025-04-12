@@ -19,7 +19,7 @@ public struct SqlInventoryItem : ISqlDataType
     public string Description;
 
     public static string SqlTable => "Item";
-    public static string SqlColomns => "name, type, desc";
+    public static string SqlColomns => "name,type,desc";
 
     public static T FromSql<T>(SqliteDataReader reader) where T : ISqlDataType
     {

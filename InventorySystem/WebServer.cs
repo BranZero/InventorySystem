@@ -222,35 +222,31 @@ public class InventoryServer
             }
             catch (Exception ex)
             {
-                Logger.Instance.Log(ServerHead.Scripts.LogLevel.Error, ex.Message);
+                Logger.Instance.Log(LogLevel.Error, ex.Message);
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 return;
             }
 
-            int result = await _sqlController.InsertInventoryRecord(record);
+            SqlInventoryRecordResult result = await _sqlController.InsertInventoryRecord(record);
             switch (result)
             {
-                case 1:
+                case SqlInventoryRecordResult.Success:
                     context.Response.StatusCode = StatusCodes.Status201Created;
                     await context.Response.WriteAsync("Record was succussfully added.");
                     break;
-                case 0:
+                case SqlInventoryRecordResult.ManyChanges:
+                    Logger.Instance.Log(LogLevel.Error, $"an Insert resulted in many changes to the database from the following: {record}");
                     context.Response.StatusCode = StatusCodes.Status200OK;
                     await context.Response.WriteAsync("Error: Failed to add record");
                     break;
-                case -1:
+                case SqlInventoryRecordResult.NothingHappend:
+                    Logger.Instance.Log(LogLevel.Error, $"an Insert resulted in no changes to the database from the following: {record}");
                     context.Response.StatusCode = StatusCodes.Status200OK;
-                    await context.Response.WriteAsync("Error: Warehouse doesn't exist yet");
-                    break;
-                case -2:
-                    context.Response.StatusCode = StatusCodes.Status200OK;
-                    await context.Response.WriteAsync("Error: Item doesn't exist in item list yet ");
+                    await context.Response.WriteAsync("Error: Failed to add record");
                     break;
                 default:
                     context.Response.StatusCode = StatusCodes.Status200OK;
-                    await context.Response.WriteAsync("Error: Record failed to add!");
-                    Logger.Instance.Log(ServerHead.Scripts.LogLevel.Warning, $"{result} is an unexpected output of add-inventory-record api\n" +
-                    $"Sql={record.ToSql}");
+                    await context.Response.WriteAsync("Error: Failed to add record");
                     break;
             }
         });
@@ -275,21 +271,21 @@ public class InventoryServer
             }
             catch (Exception ex)
             {
-                Logger.Instance.Log(ServerHead.Scripts.LogLevel.Error, ex.Message);
+                Logger.Instance.Log(LogLevel.Error, ex.Message);
                 context.Response.StatusCode = StatusCodes.Status406NotAcceptable;
                 return;
             }
 
             //Add new inventory item
             int amount = await _sqlController.InsertItem(record);
-            if (amount > 0)
+            if (amount == 1)
             {
                 context.Response.StatusCode = StatusCodes.Status201Created;
                 await context.Response.WriteAsync("Item added successfully!");
             }
             else
             {
-                context.Response.StatusCode = StatusCodes.Status409Conflict;
+                context.Response.StatusCode = StatusCodes.Status200OK;
                 await context.Response.WriteAsync("Item failed to add!");
             }
 
@@ -315,21 +311,21 @@ public class InventoryServer
             }
             catch (Exception ex)
             {
-                Logger.Instance.Log(ServerHead.Scripts.LogLevel.Error, ex.Message);
+                Logger.Instance.Log(LogLevel.Error, ex.Message);
                 context.Response.StatusCode = StatusCodes.Status406NotAcceptable;
                 return;
             }
 
             //Add new inventory item
             int amount = await _sqlController.InsertWarehouse(record);
-            if (amount > 0)
+            if (amount == 1)
             {
                 context.Response.StatusCode = StatusCodes.Status201Created;
                 await context.Response.WriteAsync("Item added successfully!");
             }
             else
             {
-                context.Response.StatusCode = StatusCodes.Status409Conflict;
+                context.Response.StatusCode = StatusCodes.Status200OK;
                 await context.Response.WriteAsync("Item failed to add!");
             }
 
@@ -390,7 +386,7 @@ public class InventoryServer
 
     public static void Main(string[] args)
     {
-        Logger.Instance.Log(ServerHead.Scripts.LogLevel.Info, "Starting Server");
+        Logger.Instance.Log(LogLevel.Information, "Starting Server");
         InventoryServer inventoryServer = new InventoryServer();
         var builder = CreateWebHostBuilder(args);
         var app = builder.Build();

@@ -35,11 +35,11 @@ namespace Sql.SqlInterface
             }
             if (sqlData is SqlWarehouse)
             {
-                _ = Task.Run(() => _warehouses.Init("Warehouse")); //intented to run in background
+                await Task.Run(() => _warehouses.Init("Warehouse")); //intended to run in background
             }
             if (sqlData is SqlInventoryItem)
             {
-                _ = Task.Run(() => _items.Init("Item")); //intented to run in background
+                await Task.Run(() => _items.Init("Item")); //intended to run in background
             }
         }
 
@@ -49,37 +49,39 @@ namespace Sql.SqlInterface
         /// </summary>
         /// <param name="sqlData"></param>
         /// <returns>greater then 0 is success less then is an error </returns>
-        public async Task<int> InsertInventoryRecord(SqlInventoryRecord sqlData)
+        public async Task<SqlInventoryRecordResult> InsertInventoryRecord(SqlInventoryRecord sqlData)
         {
-            //check if valid
-            if (!_warehouses.Contains(sqlData.Location))
-            {
-                //Warehouse doesn't exist yet
-                return -1;
-            }
-            if (!_items.Contains(sqlData.Item))
-            {
-                //item doesn't exist in item list yet 
-                return -2;
-            }
+            //Warehouse doesn't exist yet
+            if (!_warehouses.Contains(sqlData.Location)) return SqlInventoryRecordResult.InvalidWarehouse;
+            //item doesn't exist in item list yet 
+            if (!_items.Contains(sqlData.Item)) return SqlInventoryRecordResult.InvalidItem;
+
+            if (!SqlInventoryRecord.IsValidRarity(sqlData.Rarity)) return SqlInventoryRecordResult.InvalidRarity;
+
+            if (sqlData.Quantity <= 0) return SqlInventoryRecordResult.QuantityAtOrBelowZero;
+
+            if (sqlData.Price < 0) return SqlInventoryRecordResult.PriceBelowZero;
+
+            int result = await AddRecord(sqlData);
+
+            //Should be only one row changed
+            if (result == 1) return SqlInventoryRecordResult.Success;
+            if (result == 0) return SqlInventoryRecordResult.NothingHappend;
+            return SqlInventoryRecordResult.ManyChanges;
+        }
+
+        public async Task<int> InsertItem(SqlInventoryItem sqlData)
+        {
+            //item name exists in item list already
+            if (_items.Contains(sqlData.Name)) return 0;
             return await AddRecord(sqlData);
         }
 
-        public async Task<int> InsertItem(SqlInventoryItem sqlData){
-            if (_items.Contains(sqlData.Name))
-            {
-                //item name exists in item list already
-                return 0;
-            }
-            return await AddRecord(sqlData);
-        }
-
-        public async Task<int> InsertWarehouse(SqlWarehouse sqlData){
-            if (_warehouses.Contains(sqlData.Name))
-            {
-                //warehouse name exists in warehouse list already
-                return 0;
-            }
+        public async Task<int> InsertWarehouse(SqlWarehouse sqlData)
+        {
+            if (!IsValidString(sqlData.Name)) return 0;
+            //warehouse name exists in warehouse list already
+            if (_warehouses.Contains(sqlData.Name)) return 0;
             return await AddRecord(sqlData);
         }
 
@@ -129,6 +131,13 @@ namespace Sql.SqlInterface
             var records = await SqlAdapter.Instance.SqlQueryResult<T>(sqlCommand);
             return records;
         }
+        #endregion
+        #region Validations
+        public bool IsValidString(string line)
+        {
+            return line.All(c => char.IsLetterOrDigit(c) || c == ' ');
+        }
+
         #endregion
     }
 }

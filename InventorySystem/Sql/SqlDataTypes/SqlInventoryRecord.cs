@@ -18,8 +18,9 @@ public struct SqlInventoryRecord : ISqlDataType
     public string Location;
     public string Item;
     public string Rarity;
-    public int Quantity;
-    public int Price;
+    public int Quantity; //can't be negative
+    public int Price; //can't be negative
+    public DateTime Date;
 
     public SqlInventoryRecord(string location, string item, string rarity, int quantity, int price)
     {
@@ -31,16 +32,17 @@ public struct SqlInventoryRecord : ISqlDataType
     }
 
     public static string SqlTable => "Inventory_Records";
-    public static string SqlColomns => "";
+    public static string SqlColomns => "warehouse_id,item_id,rarity,quantity,price,date";
 
     public static T FromSql<T>(SqliteDataReader reader) where T : ISqlDataType
     {
         return (T)(ISqlDataType) new SqlInventoryRecord{
-            Location = reader.GetString(reader.GetOrdinal("location")),
-            Item = reader.GetString(reader.GetOrdinal("name")),
-            Rarity = reader.GetString(reader.GetOrdinal("name")),
+            Location = reader.GetString(reader.GetOrdinal("warehouse_id")),
+            Item = reader.GetString(reader.GetOrdinal("item_id")),
+            Rarity = reader.GetString(reader.GetOrdinal("rarity")),
             Quantity = reader.GetInt32(reader.GetOrdinal("quantity")),
             Price = reader.GetInt32(reader.GetOrdinal("price")),
+            Date = reader.GetDateTime(reader.GetOrdinal("date")),
         };
     }
 
@@ -50,18 +52,30 @@ public struct SqlInventoryRecord : ISqlDataType
     {
         return rarity switch
         {
-            "common" or "uncommon" or "rare" or "heroic" or "epic" or "legendary" => true,
+            "Common" or "Uncommon" or "Rare" or "Heroic" or "Epic" or "Legendary" => true,
             _ => false,
         };
     }
 
     public string ToSql()
     {
-        return $"'{Location}','{Item}','{Rarity}','{Quantity}','{Price}',Date.Now()";
+        return $"'{Location}','{Item}','{Rarity}','{Quantity}','{Price}',CURRENT_TIMESTAMP";
     }
 
     public override readonly string ToString()
     {
         return $"[{Location},{Item},{Rarity},{Quantity},{Price}]";
     }
+}
+
+public enum SqlInventoryRecordResult
+{
+    InvalidWarehouse,
+    InvalidItem,
+    InvalidRarity,
+    QuantityAtOrBelowZero,
+    PriceBelowZero,
+    NothingHappend,
+    Success,
+    ManyChanges,
 }
