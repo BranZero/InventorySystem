@@ -15,12 +15,12 @@ internal partial class SqlInventoryRecordSerializationOptions : JsonSerializerCo
 
 public struct SqlInventoryRecord : ISqlDataType
 {
-    public string Location;
-    public string Item;
-    public string Rarity;
-    public int Quantity; //can't be negative
-    public int Price; //can't be negative
-    public DateTime Date;
+    public string Location { get; set; }
+    public string Item { get; set; }
+    public string Rarity { get; set; }
+    public int Quantity { get; set; } //can't be negative
+    public int Price { get; set; } //can't be negative
+    public DateTime Date { get; set; }
 
     public SqlInventoryRecord(string location, string item, string rarity, int quantity, int price)
     {
