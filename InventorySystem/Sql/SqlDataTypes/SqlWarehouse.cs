@@ -14,7 +14,7 @@ internal partial class SqlWarehouseSerializationOptions : JsonSerializerContext
 }
 public struct SqlWarehouse : ISqlDataType
 {
-    public string Name;
+    public string Name { get; set; }
 
     public SqlWarehouse(string name){
         Name = name;

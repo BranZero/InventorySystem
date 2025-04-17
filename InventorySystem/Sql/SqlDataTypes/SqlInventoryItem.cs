@@ -14,9 +14,9 @@ internal partial class SqlInventoryItemSerializationOptions : JsonSerializerCont
 }
 public struct SqlInventoryItem : ISqlDataType
 {
-    public string Name;
-    public string Type;
-    public string Description;
+    public string Name { get; set; }
+    public string Type { get; set; }
+    public string Description { get; set; }
 
     public static string SqlTable => "Item";
     public static string SqlColomns => "name,type,desc";
