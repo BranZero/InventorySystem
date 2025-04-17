@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory Service</title>
     <link rel="stylesheet" href="SourceFiles/styles.css">
+    <link rel="stylesheet" href="SourceFiles/forms.css">
 </head>
 <body>
     <ul class="navbar">
@@ -26,17 +27,21 @@
         </div>
     </ul>
     <main>
-        <section id="quick-access">
-            <h2>Quick Access</h2>
-            <ul id="quick-links">
-                <!-- Quick access links will be populated here -->
-            </ul>
-        </section>
-        <section id="recent-access">
-            <h2>Recent Access</h2>
-            <ul id="recent-links">
-                <!-- Recent access links will be populated here -->
-            </ul>
+        <section id="add-warehouse">
+            <h2>Add New Item</h2>
+            <form id="add-warehouse-form">
+                <div class="row">
+                    <div class="col-25">
+                        <label for="name">Name:</label>
+                    </div>
+                    <div class="col-75">
+                        <input type="text" maxlength="48" id="name" name="name" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <button class="button-design button-form" type="submit">Add Warehouse</button>
+                </div>
+            </form>
         </section>
     </main>
     <script src="SourceFiles/scripts.js"></script>

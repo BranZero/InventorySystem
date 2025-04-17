@@ -72,6 +72,9 @@ namespace Sql.SqlInterface
 
         public async Task<int> InsertItem(SqlInventoryItem sqlData)
         {
+            if (!IsValidString(sqlData.Name)) return 0;
+            if (!IsValidString(sqlData.Type)) return 0;
+            if (!IsValidString(sqlData.Description)) return 0;
             //item name exists in item list already
             if (_items.Contains(sqlData.Name)) return 0;
             return await AddRecord(sqlData);
