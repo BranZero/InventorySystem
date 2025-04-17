@@ -31,9 +31,12 @@ main {
 }
 
 /*button designs*/
-.button-design a{
+.button-design{
+    font-size: large;
+
     border-color: #363636;
     border-radius: 1em;
+    border: none;
     padding: 1em;
     margin: .5em;
 
@@ -43,9 +46,8 @@ main {
     text-decoration: none;
     display: block;
 }
-.button-design a:hover {
+.button-design:hover{
     background: linear-gradient(to top, #414141, #363636);
-    transform: scale(1.03);
 }
 
 /*needed for manage drop down to function*/
