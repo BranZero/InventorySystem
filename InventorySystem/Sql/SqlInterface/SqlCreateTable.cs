@@ -4,7 +4,7 @@ namespace Sql.SqlInterface;
 public class SqlCreateTable
 {
     //Create the default tables for the database
-    public static async Task InitialDataBaseTables()
+    public static async Task InitialDataBaseTables(SqlAdapter sqlAdapter)
     {
         string result;
         string sqlLine;
@@ -25,7 +25,7 @@ public class SqlCreateTable
         //Warehouse table
         sqlLine = $"CREATE TABLE IF NOT EXISTS {SqlWarehouse.SqlTable} (" +
             "name TEXT NOT NULL PRIMARY KEY);";
-        result = await SqlAdapter.Instance.SqlNoQueryResults(sqlLine);
+        result = await sqlAdapter.SqlNoQueryResults(sqlLine);
         Console.WriteLine(result);
 
         //Inventory Item Table
@@ -33,7 +33,7 @@ public class SqlCreateTable
             "name TEXT NOT NULL PRIMARY KEY," +
             "type TEXT NOT NULL," +
             "desc TEXT NOT NULL);";
-        result = await SqlAdapter.Instance.SqlNoQueryResults(sqlLine);
+        result = await sqlAdapter.SqlNoQueryResults(sqlLine);
         Console.WriteLine(result);
 
         //Inventory Table
@@ -47,7 +47,14 @@ public class SqlCreateTable
             "date DATE," +
             "FOREIGN KEY (warehouse_id) REFERENCES Warehouse(name)," +
             "FOREIGN KEY (item_id) REFERENCES Item(name));";
-        result = await SqlAdapter.Instance.SqlNoQueryResults(sqlLine);
+        result = await sqlAdapter.SqlNoQueryResults(sqlLine);
         Console.WriteLine(result);
+    }
+    public static async Task ResetTables(SqlAdapter sqlAdapter)
+    {
+        string sql = "DROP TABLE IF EXISTS Inventory_Records;" +
+            "DROP TABLE IF EXISTS Warehouse;" +
+            "DROP TABLE IF EXISTS Item;";
+        string result = await sqlAdapter.SqlNoQueryResults(sql);
     }
 }
