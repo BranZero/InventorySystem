@@ -1,7 +1,4 @@
-using Microsoft.Data.Sqlite;
 using Sql.SqlDataTypes;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sql.SqlInterface
@@ -12,7 +9,7 @@ namespace Sql.SqlInterface
         private SqlInMemory<SqlWarehouse> _warehouses;
         private SqlInMemory<SqlInventoryItem> _items;
 
-        internal SqlAdapter _sqlAdapter;
+        private SqlAdapter _sqlAdapter;
 
         public SqlController(string sqlDBPath)
         {
@@ -85,7 +82,7 @@ namespace Sql.SqlInterface
             return records;
         }
 
-        public async Task<List<T>?> GetSortedSubList<T>(string likeClause, string orderBy) where T : ISqlDataType
+        internal async Task<List<T>?> GetSortedSubList<T>(string likeClause, string orderBy) where T : ISqlDataType
         {
             string sqlCommand = $"SELECT * FROM {T.SqlTable} WHERE {likeClause} ORDER BY {orderBy};";
             var records = await _sqlAdapter.SqlQueryResult<T>(sqlCommand);

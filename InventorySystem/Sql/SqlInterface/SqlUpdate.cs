@@ -1,7 +1,3 @@
-
-
-
-
 using Sql.SqlDataTypes;
 
 namespace Sql.SqlInterface;
