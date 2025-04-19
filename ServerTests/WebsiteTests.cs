@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Testing;
 using NUnit.Framework;
+using InventorySystem.ServerScripts.Server;
 
 namespace WebsiteTests;
 

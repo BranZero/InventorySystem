@@ -1,35 +1,17 @@
 using System;
 using Microsoft.Data.Sqlite;
-using ServerHead.Scripts;
+using InventorySystem.ServerScripts;
 using Sql.SqlDataTypes;
 // using ServerHead.Scripts;
 
 public class SqlAdapter
 {
+    private SqliteConnection _dbConnection;
 
-    public const string Connection_Path = "Data Source=Inventory.db";
-    private static SqlAdapter _instance;
-    private static SqliteConnection _dbConnection;
-
-    static SqlAdapter()
+    public SqlAdapter(string connectionPath)
     {
-        _dbConnection = new SqliteConnection(Connection_Path);
-        _instance = new SqlAdapter();
-    }
-    private SqlAdapter()
-    {
-        _dbConnection.OpenAsync();
-    }
-    public static SqlAdapter Instance
-    {
-        get
-        {
-            if (_dbConnection.State == System.Data.ConnectionState.Closed)
-            {
-                _dbConnection.OpenAsync();
-            }
-            return _instance;
-        }
+        _dbConnection = new SqliteConnection(connectionPath);
+        _dbConnection.Open();
     }
 
     public async Task<string> SqlNoQueryResults(string sql)
@@ -49,14 +31,13 @@ public class SqlAdapter
         }
     }
 
-    public async Task<List<T>?> SqlQueryResult<T>(string sql) where T : ISqlDataType
+    public async Task<List<T>> SqlQueryResult<T>(string sql) where T : ISqlDataType
     {
         await using SqliteCommand? command = new SqliteCommand(sql, _dbConnection);
+        var records = new List<T>();
         try
         {
             SqliteDataReader reader = await command.ExecuteReaderAsync();
-            var records = new List<T>();
-
             if (reader != null)
             {
                 while (await reader.ReadAsync())
@@ -66,18 +47,19 @@ public class SqlAdapter
                     records.Add(record);
                 }
             }
-            return records;
         }
         catch (Exception e)
         {
             Logger.Instance.Log(LogLevel.Error, e.Message);
-            return null;
+            return new List<T>();//return empty
         }
+        return records;
     }
 
-    public async Task Dispose()
+    public void Dispose()
     {
-        await _dbConnection.CloseAsync();
-        await _dbConnection.DisposeAsync();
+        _dbConnection.Close();
+        _dbConnection.Dispose();
+        SqliteConnection.ClearAllPools();
     }
 }

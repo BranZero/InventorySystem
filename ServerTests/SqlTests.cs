@@ -12,9 +12,9 @@ public class SqlTests
     [SetUp]
     public async Task SetUp()
     {
-        _sqlController = new();
-        _sqlAdpter = SqlAdapter.Instance;
-        await ResetTables();
+        _sqlController = new("Data Source=InventoryTest.db");
+        _sqlAdpter = _sqlController.GetAdpter();
+        await SqlCreateTable.ResetTables(_sqlAdpter);
 
         await _sqlController.InitDataBaseConection();
         await BuildTestDataBase();
@@ -23,24 +23,16 @@ public class SqlTests
     [TearDown]
     public async Task TearDown()
     {
-        await ResetTables();
-        // await SqlAdapter.Instance.Dispose();
-        // try
-        // {
-        //     File.Delete(@".\Inventory.db");
-        // }
-        // catch (System.Exception)
-        // {
-        //     //most likely a used by another process
-        // }
-    }
-    
-    private async Task ResetTables()
-    {
-        string sql = "DROP TABLE IF EXISTS Inventory_Records;" +
-            "DROP TABLE IF EXISTS Warehouse;" +
-            "DROP TABLE IF EXISTS Item;";
-        string result = await SqlAdapter.Instance.SqlNoQueryResults(sql);
+        await SqlCreateTable.ResetTables(_sqlAdpter);
+        _sqlAdpter.Dispose();
+        try
+        {
+            File.Delete(@".\Inventory.db");
+        }
+        catch (System.Exception)
+        {
+            //most likely a used by another process
+        }
     }
 
     private async Task BuildTestDataBase()
@@ -63,7 +55,7 @@ public class SqlTests
             {
                 Name = items[i],
                 Type = types[i],
-                Description = "n/a"
+                Description = "NA"
             };
             await _sqlController.InsertItem(sqlInventoryItem);
         }
@@ -122,7 +114,7 @@ public class SqlTests
         SqlInventoryItem sqlInventoryItem = new(){
             Name = name,
             Type = type,
-            Description = "N/A"
+            Description = "NA"
         };
         int result = await _sqlController.InsertItem(sqlInventoryItem);
         Assert.That(result, Is.EqualTo(1),$"Name={name}, Type={type}");
@@ -134,7 +126,7 @@ public class SqlTests
         SqlInventoryItem sqlInventoryItem = new(){
             Name = name,
             Type = type,
-            Description = "N/A"
+            Description = "NA"
         };
         int result = await _sqlController.InsertItem(sqlInventoryItem);
         Assert.That(result, Is.EqualTo(0));

@@ -1,4 +1,4 @@
-using ServerHead.Scripts;
+using InventorySystem.ServerScripts;
 
 namespace TestCase;
 
