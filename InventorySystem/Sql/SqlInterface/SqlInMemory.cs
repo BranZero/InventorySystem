@@ -14,7 +14,7 @@ public class SqlInMemory<T> where T : ISqlDataType
         _data = new HashSet<string>();
         _mutex = new Mutex();
     }
-    public async Task Init(string tableName)
+    public async Task Init()
     {
 
         var records = await _sqlController.GetSortedRecords<T>("name");

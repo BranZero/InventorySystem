@@ -1,7 +1,7 @@
-namespace ServerHead.Scripts;
 using System.Security.Cryptography;
 using System.Text;
 
+namespace InventorySystem.ServerScripts;
 public class EncryptData
 {
     public static string? HashSha384(string input)

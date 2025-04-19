@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 
-namespace ServerHead.Scripts;
+namespace InventorySystem.ServerScripts;
 public class Logger
 {
     private static readonly Lazy<Logger> _instance = new(new Logger());

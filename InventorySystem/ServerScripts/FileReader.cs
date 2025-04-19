@@ -1,5 +1,5 @@
 
-namespace ServerHead.Scripts;
+namespace InventorySystem.ServerScripts;
 
 public class FileReader
 {
