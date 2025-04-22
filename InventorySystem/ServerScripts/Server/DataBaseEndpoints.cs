@@ -148,16 +148,16 @@ public partial class InventoryServer
                     break;
                 case SqlInventoryRecordResult.ManyChanges:
                     Logger.Instance.Log(LogLevel.Error, $"an Insert resulted in many changes to the database from the following: {record}");
-                    context.Response.StatusCode = StatusCodes.Status200OK;
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
                     await context.Response.WriteAsync("Error: Failed to add record");
                     break;
                 case SqlInventoryRecordResult.NothingHappend:
                     Logger.Instance.Log(LogLevel.Error, $"an Insert resulted in no changes to the database from the following: {record}");
-                    context.Response.StatusCode = StatusCodes.Status200OK;
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
                     await context.Response.WriteAsync("Error: Failed to add record");
                     break;
                 default:
-                    context.Response.StatusCode = StatusCodes.Status200OK;
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
                     await context.Response.WriteAsync("Error: Failed to add record");
                     break;
             }

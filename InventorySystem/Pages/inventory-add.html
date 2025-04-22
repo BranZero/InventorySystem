@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add to Inventory</title>
     <link rel="stylesheet" href="SourceFiles/styles.css">
+    <link rel="stylesheet" href="SourceFiles/forms.css">
 </head>
+
 <body>
     <ul class="navbar">
         <div class="navbar-left">
@@ -27,26 +30,60 @@
     </ul>
     <main>
         <h2>Add Items to Inventory</h2>
-        <form id="inventory-form">
-            <label for="location">Location:</label>
-            <input type="text" id="location" name="location" required>
-
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required>
-
-            <label for="rarity">Rarity:</label>
-            <input type="text" id="rarity" name="rarity" required>
-            
-            <label for="quantity">Quantity:</label>
-            <input type="number" id="quantity" name="quantity" required>
-            
-            <label for="price">Price:</label>
-            <input type="number" id="price" name="item-price" required>
-            
-            <button type="submit">Add to Inventory</button>
+        <form id="add-warehouse-form">
+            <div class="row">
+                <div class="col-25">
+                    <label for="location">Location:</label>
+                </div>
+                <div class="col-75">
+                    <input type="text" id="location" name="location" maxlength="48" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-25">
+                    <label for="name">Name:</label>
+                </div>
+                <div class="col-75">
+                    <input type="text" id="name" name="name" maxlength="48" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-25">
+                    <label for="rarity">Rarity:</label>
+                </div>
+                <div class="col-75">
+                    <select id="rarity" name="rarity" required>
+                        <option value="Common">Common</option>
+                        <option value="Uncommon">Uncommon</option>
+                        <option value="Rare">Rare</option>
+                        <option value="Heroic">Heroic</option>
+                        <option value="Epic">Epic</option>
+                        <option value="Legendary">Legendary</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-25">
+                    <label for="quantity">Quantity:</label>
+                </div>
+                <div class="col-75"></div>
+                <input type="number" id="quantity" name="quantity" value="1" min="1" required>
+            </div>
+            </div>
+            <div class="row">
+                <div class="col-25">
+                    <label for="price">Price:</label>
+                </div>
+                <div class="col-75"></div>
+                <input type="number" id="price" name="item-price" value="0" min="0" required>
+            </div>
+            </div>
+            <div class="row">
+                <button class="button-design button-form" type="submit">Add Inventory Record</button>
+            </div>
         </form>
-        
-        <h2>Current Inventory</h2>
+
+        <!-- <h2>Current Inventory</h2>
         <table id="inventory-table">
             <thead>
                 <tr>
@@ -56,10 +93,11 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Inventory rows will be added here -->
+                 Inventory rows will be added here 
             </tbody>
-        </table>
+        </table> -->
     </main>
     <script src="SourceFiles/inventory-add-record.js"></script>
 </body>
+
 </html>
