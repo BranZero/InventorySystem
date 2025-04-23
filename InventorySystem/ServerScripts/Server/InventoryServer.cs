@@ -1,74 +1,84 @@
-using Sql.SqlInterface;
-using Sql.SqlDataTypes;
 using InventorySystem.ServerScripts;
+using Microsoft.AspNetCore.Mvc;
+using Sql.SqlInterface;
 
-namespace InventorySystem.ServerScripts.Server;
-public partial class InventoryServer
+namespace InventorySystem.Controllers
 {
-    private readonly DirectoryInMemory _sourceFiles;
-    private readonly DirectoryInMemory _pageFiles;
-    private readonly SqlController _sqlController;
-
-    /// <summary>
-    /// Creates a new server instance
-    /// </summary>
-    public InventoryServer(string sourcePath, string pagePath, string sqlDBConnectionPath)
+    public partial class HomeController : Controller
     {
-        _sourceFiles = new DirectoryInMemory(sourcePath);
-        _pageFiles = new DirectoryInMemory(pagePath);
-        _sqlController = new SqlController(sqlDBConnectionPath);
+        private readonly DirectoryInMemory _sourceFiles;
+        private readonly DirectoryInMemory _pageFiles;
+        private readonly SqlController _sqlController;
 
-        //Initilize the files needed to be stored in memory before creating the server
-        BootSequence();
-    }
-
-    private static string? GetContentType(string fileName)
-    {
-        string ext = Path.GetExtension(fileName);
-        return ext switch
+        public HomeController(DirectoryInMemory sourceFiles, DirectoryInMemory pageFiles, SqlController sqlController)
         {
-            ".css" => "text/css",
-            ".js" => "application/javascript",
-            ".html" => "text/html",
-            ".json" => "application/json",
-            ".png" => "image/png",
-            ".jpg" => "image/jpeg",
-            // ".gif" => "image/gif",
-            // ".svg" => "image/svg+xml",
-            // ".wasm" => "application/wasm",
-            // ".pck" => "application/octet-stream",
-            _ => null, // unsupported file type
-        };
-    }
+            _sourceFiles = sourceFiles;
+            _pageFiles = pageFiles;
+            _sqlController = sqlController;
+        }
 
-    private static bool StringValidation(string value)
-    {
-        //contains only letters, numbers and dots
-        return value.All(c => char.IsLetterOrDigit(c) || c == ' ' || c == '.' || c == '-');
-    }
-    private async void BootSequence()
-    {
-        Task sourceTask = _sourceFiles.LoadFilesIntoMemory();
-        Task pageTask = _pageFiles.LoadFilesIntoMemory();
-        Task sqlTask = _sqlController.InitDataBaseConection();
-
-        await sourceTask;
-        await pageTask;
-        await sqlTask;
-
-#if DEBUG
-        _ = Task.Run(async () =>
-        { //include in debug only for live changes to website's front end
-            while (true)
+        public IActionResult Index(string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName) || !StringValidation(fileName))
             {
-                await Task.Delay(3000);
-                Task sourceTask = _sourceFiles.RefreshFilesInMemory();
-                Task pageTask = _pageFiles.RefreshFilesInMemory();
-
-                await sourceTask;
-                await pageTask;
+                return BadRequest();
             }
-        });
-#endif
+
+            if (Path.GetExtension(fileName) != string.Empty)
+            {
+                return BadRequest();
+            }
+
+            string htmlFilePath = fileName + ".html";
+            ReadOnlyMemory<byte> content = _pageFiles.GetFile(htmlFilePath);
+            if (content.Length == 0)
+            {
+                return NotFound();
+            }
+
+            return File(content.ToArray(), "text/html");
+        }
+
+        public IActionResult SourceFiles(string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName) || !StringValidation(fileName))
+            {
+                return BadRequest();
+            }
+
+            string? contentType = GetContentType(fileName);
+            if (contentType == null)
+            {
+                return BadRequest();
+            }
+
+            ReadOnlyMemory<byte> content = _sourceFiles.GetFile(fileName);
+            if (content.Length == 0)
+            {
+                return NotFound();
+            }
+
+            return File(content.ToArray(), contentType);
+        }
+
+        private static string? GetContentType(string fileName)
+        {
+            string ext = Path.GetExtension(fileName);
+            return ext switch
+            {
+                ".css" => "text/css",
+                ".js" => "application/javascript",
+                ".html" => "text/html",
+                ".json" => "application/json",
+                ".png" => "image/png",
+                ".jpg" => "image/jpeg",
+                _ => null,
+            };
+        }
+
+        private static bool StringValidation(string value)
+        {
+            return value.All(c => char.IsLetterOrDigit(c) || c == ' ' || c == '.' || c == '-');
+        }
     }
 }

@@ -1,26 +1,71 @@
 using InventorySystem.ServerScripts;
-using InventorySystem.ServerScripts.Server;
 // using Microsoft.AspNetCore.Mvc;
 
 public class Program
 {
     public static void Main(string[] args)
     {
-        Logger.Instance.Log(LogLevel.Information, "Starting Server");
-        InventoryServer inventoryServer = new InventoryServer(@"SourceFiles",@"Pages","Data Source=Inventory.db");
-        var builder = CreateWebHostBuilder(args);
+        var builder = WebApplication.CreateBuilder(args);
+
+        // Add services to the container.
+        builder.Services.AddControllersWithViews();
+
         var app = builder.Build();
-        inventoryServer.ConfigureWebHost(app, builder.Environment);
-        inventoryServer.ConfigureWebHostDB(app, builder.Environment);
+
+        // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+        }
+        else
+        {
+            app.UseExceptionHandler("/Home/Error");
+            app.UseHsts();
+        }
+
+        app.UseHttpsRedirection();
+        app.UseStaticFiles();
+
+        app.UseRouting();
+
+        app.UseAuthorization();
+
+        app.MapControllerRoute(
+            name: "default",
+            pattern: "{controller=Home}/{action=Index}/{id?}");
+
         app.Run();
+
+    }
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+        }
+        else
+        {
+            app.UseExceptionHandler("/Home/Error");
+            app.UseHsts();
+        }
+
+        app.UseHttpsRedirection();
+        app.UseStaticFiles();
+
+        app.UseRouting();
+
+        app.UseAuthorization();
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllerRoute(
+                name: "default",
+                pattern: "{controller=Home}/{action=Index}/{id?}");
+        });
+    }
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddControllersWithViews();
     }
 
-    public static WebApplicationBuilder CreateWebHostBuilder(string[] args)
-    {
-        WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(args);
-        builder.WebHost.UseUrls();
-        builder.Services.AddAuthentication();
-        builder.Services.AddRouting();
-        return builder;
-    }
 }
