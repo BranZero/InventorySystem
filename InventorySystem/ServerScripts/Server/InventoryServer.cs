@@ -1,27 +1,33 @@
 using InventorySystem.ServerScripts;
 using Microsoft.AspNetCore.Mvc;
+using Sql.SqlDataTypes;
 using Sql.SqlInterface;
 
 namespace InventorySystem.Controllers
 {
+    [Route("")]
     public partial class HomeController : Controller
     {
         private readonly DirectoryInMemory _sourceFiles;
         private readonly DirectoryInMemory _pageFiles;
         private readonly SqlController _sqlController;
 
-        public HomeController(DirectoryInMemory sourceFiles, DirectoryInMemory pageFiles, SqlController sqlController)
+        public HomeController()
         {
-            _sourceFiles = sourceFiles;
-            _pageFiles = pageFiles;
-            _sqlController = sqlController;
+            _sourceFiles = new DirectoryInMemory(@"wwwroot/source-files");
+            _pageFiles = new DirectoryInMemory(@"wwwroot/pages");
+            _sqlController = new SqlController("Data Source=Inventory.db");
+
+            //Initilize the files needed to be stored in memory before creating the server
+            BootSequence();
         }
 
-        public IActionResult Index(string fileName)
+        [HttpGet("pages/{fileName}")]
+        public IActionResult Pages(string fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName) || !StringValidation(fileName))
             {
-                return BadRequest();
+                return BadRequest("");
             }
 
             if (Path.GetExtension(fileName) != string.Empty)
@@ -39,6 +45,7 @@ namespace InventorySystem.Controllers
             return File(content.ToArray(), "text/html");
         }
 
+        [HttpGet("source-files/{fileName}")]
         public IActionResult SourceFiles(string fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName) || !StringValidation(fileName))
@@ -79,6 +86,32 @@ namespace InventorySystem.Controllers
         private static bool StringValidation(string value)
         {
             return value.All(c => char.IsLetterOrDigit(c) || c == ' ' || c == '.' || c == '-');
+        }
+
+        private async void BootSequence()
+        {
+            Task sourceTask = _sourceFiles.LoadFilesIntoMemory();
+            Task pageTask = _pageFiles.LoadFilesIntoMemory();
+            Task sqlTask = _sqlController.InitDataBaseConection();
+
+            await sourceTask;
+            await pageTask;
+            await sqlTask;
+
+#if DEBUG
+            _ = Task.Run(async () =>
+            { //include in debug only for live changes to website's front end
+                while (true)
+                {
+                    await Task.Delay(3000);
+                    Task sourceTask = _sourceFiles.RefreshFilesInMemory();
+                    Task pageTask = _pageFiles.RefreshFilesInMemory();
+
+                    await sourceTask;
+                    await pageTask;
+                }
+            });
+#endif
         }
     }
 }

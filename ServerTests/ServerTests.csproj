@@ -22,13 +22,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\InventorySystem\InventorySystem.csproj" />
-    <Content Include="..\InventorySystem\Pages\*.html">
+    <Content Include="..\InventorySystem\wwwroot\*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        <TargetPath>Pages\%(Filename)%(Extension)</TargetPath>
-    </Content>
-    <Content Include="..\InventorySystem\SourceFiles\*">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        <TargetPath>SourceFiles\%(Filename)%(Extension)</TargetPath>
+        <TargetPath>wwwroot\%(Filename)%(Extension)</TargetPath>
     </Content>
   </ItemGroup>
 
