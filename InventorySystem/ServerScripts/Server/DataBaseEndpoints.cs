@@ -115,7 +115,7 @@ public partial class InventoryServer
 
         // });
         //Add new inventory record to database
-        app.MapPost("/api/add-inventory-record", async context =>
+        app.MapPost("/api/add-record", async context =>
         {
             if (context.Request.ContentType != "application/json")
             {
@@ -135,7 +135,7 @@ public partial class InventoryServer
             catch (Exception ex)
             {
                 Logger.Instance.Log(LogLevel.Error, ex.Message);
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                 return;
             }
 
@@ -143,7 +143,7 @@ public partial class InventoryServer
             switch (result)
             {
                 case SqlInventoryRecordResult.Success:
-                    context.Response.StatusCode = StatusCodes.Status201Created;
+                    context.Response.StatusCode = StatusCodes.Status200OK;
                     await context.Response.WriteAsync("Record was succussfully added.");
                     break;
                 case SqlInventoryRecordResult.ManyChanges:
@@ -184,7 +184,7 @@ public partial class InventoryServer
             catch (Exception ex)
             {
                 Logger.Instance.Log(LogLevel.Error, ex.Message);
-                context.Response.StatusCode = StatusCodes.Status406NotAcceptable;
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                 return;
             }
 
@@ -192,12 +192,12 @@ public partial class InventoryServer
             int amount = await _sqlController.InsertItem(record);
             if (amount == 1)
             {
-                context.Response.StatusCode = StatusCodes.Status201Created;
+                context.Response.StatusCode = StatusCodes.Status200OK;
                 await context.Response.WriteAsync("Item added successfully!");
             }
             else
             {
-                context.Response.StatusCode = StatusCodes.Status200OK;
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 await context.Response.WriteAsync("Item failed to add!");
             }
 

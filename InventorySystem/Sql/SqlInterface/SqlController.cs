@@ -92,6 +92,10 @@ namespace Sql.SqlInterface
         #region Validations
         public bool IsValidString(string line)
         {
+            if(line == null)
+            {
+                return false;
+            }
             return line.All(c => char.IsLetterOrDigit(c) || c == ' ');
         }
 
